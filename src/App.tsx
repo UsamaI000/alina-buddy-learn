@@ -32,17 +32,17 @@ const App = () => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
+          // Fetch user profile (defer to avoid deadlocks)
           setTimeout(async () => {
             const { data: profile } = await supabase
               .from('profiles')
               .select('*')
-              .eq('user_id', session.user.id)
+              .eq('user_id', session.user!.id)
               .single();
 
             if (profile) {
