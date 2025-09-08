@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoginProps {
   onLogin: (user: { name: string; role: "student" | "instructor"; apprenticeship: string }) => void;
@@ -91,24 +92,55 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
     "Maler/in und Lackierer/in"
   ];
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    const mockUser = {
-      name: "Max Mustermann",
-      role: "student" as const,
-      apprenticeship: "Kfz-Mechatroniker/in"
-    };
     
-    toast({
-      title: t.loginSuccess,
-      description: `Willkommen zurück, ${mockUser.name}!`
-    });
-    
-    onLogin(mockUser);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (error) {
+        toast({
+          title: "Fehler beim Anmelden",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data.user) {
+        // Fetch user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single();
+
+        const user = {
+          name: profile ? `${profile.first_name} ${profile.last_name}` : data.user.email || "",
+          role: (profile?.role as "student" | "instructor") || "student",
+          apprenticeship: profile?.apprenticeship || ""
+        };
+
+        toast({
+          title: t.loginSuccess,
+          description: `Willkommen zurück, ${user.name}!`
+        });
+        
+        onLogin(user);
+      }
+    } catch (error) {
+      toast({
+        title: "Unerwarteter Fehler",
+        description: "Bitte versuchen Sie es später erneut.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (registerData.password !== registerData.confirmPassword) {
@@ -120,18 +152,61 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
       return;
     }
     
-    const newUser = {
-      name: `${registerData.firstName} ${registerData.lastName}`,
-      role: registerData.role,
-      apprenticeship: registerData.apprenticeship || "Kfz-Mechatroniker/in"
-    };
-    
-    toast({
-      title: t.registerSuccess,
-      description: `Willkommen bei ALINA, ${newUser.name}!`
-    });
-    
-    onLogin(newUser);
+    if (!registerData.firstName || !registerData.lastName) {
+      toast({
+        title: "Fehler",
+        description: "Vor- und Nachname sind erforderlich",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: registerData.email,
+        password: registerData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            first_name: registerData.firstName,
+            last_name: registerData.lastName,
+            role: registerData.role,
+            apprenticeship: registerData.apprenticeship || "Kfz-Mechatroniker/in",
+            company: registerData.company
+          }
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Fehler bei der Registrierung",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data.user) {
+        const newUser = {
+          name: `${registerData.firstName} ${registerData.lastName}`,
+          role: registerData.role,
+          apprenticeship: registerData.apprenticeship || "Kfz-Mechatroniker/in"
+        };
+        
+        toast({
+          title: t.registerSuccess,
+          description: `Willkommen bei ALINA, ${newUser.name}!`
+        });
+        
+        onLogin(newUser);
+      }
+    } catch (error) {
+      toast({
+        title: "Unerwarteter Fehler",
+        description: "Bitte versuchen Sie es später erneut.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
