@@ -10,16 +10,15 @@ import Login from "./pages/Login";
 import ChatInterface from "./components/ChatInterface";
 import Dashboard from "./components/Dashboard";
 import NotFound from "./pages/NotFound";
+import AzubiHome from "./pages/azubi/AzubiHome";
+import AusbilderDashboard from "./pages/ausbilder/AusbilderDashboard";
+import { RouteGuard } from "./components/RouteGuard";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import type { AppUser, UserRole } from "@/types/auth";
+import { mapLegacyRole, getRoleBasedRedirect } from "@/utils/auth";
 
 const queryClient = new QueryClient();
-
-interface AppUser {
-  name: string;
-  role: "student" | "instructor" | "admin";
-  apprenticeship: string;
-}
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -46,13 +45,19 @@ const App = () => {
               .single();
 
             if (profile) {
+              const userRole = profile.role as UserRole;
               const appUser: AppUser = {
+                id: session.user!.id,
                 name: `${profile.first_name} ${profile.last_name}`,
-                role: profile.role as "student" | "instructor" | "admin",
-                apprenticeship: profile.apprenticeship || ""
+                role: userRole,
+                apprenticeship: profile.apprenticeship || "",
+                email: session.user!.email || ""
               };
               setCurrentUser(appUser);
-              setCurrentPage("dashboard");
+              
+              // Redirect to role-specific dashboard
+              const redirectPath = getRoleBasedRedirect(userRole);
+              setCurrentPage(redirectPath === '/azubi/home' ? 'azubi-home' : 'ausbilder-dashboard');
             }
           }, 0);
         } else {
@@ -153,8 +158,39 @@ const App = () => {
             language={currentLanguage}
           />
         );
+      case "azubi-home":
+        return (
+          <RouteGuard requiredRoles={['AUSZUBILDENDE_R']}>
+            <div>
+              <Navigation
+                currentUser={currentUser}
+                currentPage={currentPage}
+                onNavigate={handleNavigate}
+                onLanguageChange={setCurrentLanguage}
+                currentLanguage={currentLanguage}
+              />
+              <AzubiHome user={currentUser!} language={currentLanguage} />
+            </div>
+          </RouteGuard>
+        );
+      case "ausbilder-dashboard":
+        return (
+          <RouteGuard requiredRoles={['AUSBILDER_IN']}>
+            <div>
+              <Navigation
+                currentUser={currentUser}
+                currentPage={currentPage}
+                onNavigate={handleNavigate}
+                onLanguageChange={setCurrentLanguage}
+                currentLanguage={currentLanguage}
+              />
+              <AusbilderDashboard user={currentUser!} language={currentLanguage} />
+            </div>
+          </RouteGuard>
+        );
       case "instructor":
-        return currentUser?.role === "instructor" ? (
+        // Legacy route - redirect to new route
+        return currentUser?.role === "AUSBILDER_IN" ? (
           <div>
             <Navigation
               currentUser={currentUser}
@@ -163,7 +199,7 @@ const App = () => {
               onLanguageChange={setCurrentLanguage}
               currentLanguage={currentLanguage}
             />
-            <Dashboard user={currentUser} language={currentLanguage} />
+            <AusbilderDashboard user={currentUser} language={currentLanguage} />
           </div>
         ) : (
           <Login

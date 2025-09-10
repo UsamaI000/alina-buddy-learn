@@ -10,8 +10,11 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+import type { AppUser, UserRole } from "@/types/auth";
+import { ROLE_DISPLAY_NAMES } from "@/types/auth";
+
 interface LoginProps {
-  onLogin: (user: { name: string; role: "student" | "instructor"; apprenticeship: string }) => void;
+  onLogin: (user: AppUser) => void;
   onBack: () => void;
   language: string;
 }
@@ -21,7 +24,7 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
   const [loginData, setLoginData] = useState({ 
     email: "", 
     password: "", 
-    role: "student" as "student" | "instructor" 
+    role: "AUSZUBILDENDE_R" as UserRole
   });
   const [registerData, setRegisterData] = useState({
     email: "",
@@ -29,7 +32,7 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
     confirmPassword: "",
     firstName: "",
     lastName: "",
-    role: "student" as "student" | "instructor",
+    role: "AUSZUBILDENDE_R" as UserRole,
     apprenticeship: "",
     company: ""
   });
@@ -122,11 +125,23 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
           .eq('user_id', data.user.id)
           .single();
 
-        const user = {
+        const userRole = profile?.role as UserRole || 'AUSZUBILDENDE_R';
+        const user: AppUser = {
+          id: data.user.id,
           name: profile ? `${profile.first_name} ${profile.last_name}` : data.user.email || "",
-          role: (profile?.role as "student" | "instructor") || "student",
-          apprenticeship: profile?.apprenticeship || ""
+          role: userRole,
+          apprenticeship: profile?.apprenticeship || "",
+          email: data.user.email || ""
         };
+
+        // Check if selected role matches server role
+        if (loginData.role !== userRole) {
+          toast({
+            title: "Rollenhinweis",
+            description: `Ihre hinterlegte Rolle ist: ${ROLE_DISPLAY_NAMES[userRole]}`,
+            variant: "default"
+          });
+        }
 
         toast({
           title: t.loginSuccess,
@@ -191,10 +206,12 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
       }
 
       if (data.user) {
-        const newUser = {
+        const newUser: AppUser = {
+          id: data.user.id,
           name: `${registerData.firstName} ${registerData.lastName}`,
           role: registerData.role,
-          apprenticeship: registerData.apprenticeship || "Kfz-Mechatroniker/in"
+          apprenticeship: registerData.apprenticeship || "Kfz-Mechatroniker/in",
+          email: data.user.email || ""
         };
         
         toast({
@@ -270,14 +287,14 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
                     <Label htmlFor="login-role">{t.role}</Label>
                     <Select
                       value={loginData.role}
-                      onValueChange={(value) => setLoginData({...loginData, role: value as "student" | "instructor"})}
+                      onValueChange={(value) => setLoginData({...loginData, role: value as UserRole})}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="student">{t.student}</SelectItem>
-                        <SelectItem value="instructor">{t.instructor}</SelectItem>
+                        <SelectItem value="AUSZUBILDENDE_R">{t.student}</SelectItem>
+                        <SelectItem value="AUSBILDER_IN">{t.instructor}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -361,14 +378,14 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
                     <Label htmlFor="role">{t.role}</Label>
                     <Select
                       value={registerData.role}
-                      onValueChange={(value) => setRegisterData({...registerData, role: value as "student" | "instructor"})}
+                      onValueChange={(value) => setRegisterData({...registerData, role: value as UserRole})}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="student">{t.student}</SelectItem>
-                        <SelectItem value="instructor">{t.instructor}</SelectItem>
+                        <SelectItem value="AUSZUBILDENDE_R">{t.student}</SelectItem>
+                        <SelectItem value="AUSBILDER_IN">{t.instructor}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -392,7 +409,7 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
                     </Select>
                   </div>
                   
-                  {registerData.role === "student" && (
+                  {registerData.role === "AUSZUBILDENDE_R" && (
                     <div className="space-y-2">
                       <Label htmlFor="company">{t.company}</Label>
                       <Input

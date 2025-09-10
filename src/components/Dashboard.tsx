@@ -15,12 +15,10 @@ import {
 } from "lucide-react";
 import alinaAvatar from "@/assets/alina-avatar.jpg";
 
+import type { AppUser } from "@/types/auth";
+
 interface DashboardProps {
-  user: {
-    name: string;
-    role: "student" | "instructor" | "admin";
-    apprenticeship: string;
-  };
+  user: AppUser;
   language: string;
 }
 
@@ -79,7 +77,7 @@ export default function Dashboard({ user, language }: DashboardProps) {
     { title: "ALINA-Freund", description: "50 Nachrichten mit ALINA", icon: "🤖" }
   ];
 
-  if (user.role === "instructor") {
+  if (user.role === "AUSBILDER_IN") {
     return <InstructorDashboard user={user} language={language} />;
   }
 

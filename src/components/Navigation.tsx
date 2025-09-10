@@ -17,11 +17,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import type { AppUser } from "@/types/auth";
+import { NAV_CONFIG } from "@/types/auth";
+import { RequireRole } from "@/components/RequireRole";
+
 interface NavigationProps {
-  currentUser?: {
-    name: string;
-    role: "student" | "instructor" | "admin";
-  };
+  currentUser?: AppUser;
   currentPage: string;
   onNavigate: (page: string) => void;
   onLanguageChange: (lang: string) => void;
@@ -47,16 +48,14 @@ export default function Navigation({
   const getNavItems = () => {
     if (!currentUser) return [];
     
-    const commonItems = [
-      { id: "chat", label: "ALINA Chat", icon: MessageSquare },
-      { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    ];
-    
-    if (currentUser.role === "instructor" || currentUser.role === "admin") {
-      commonItems.push({ id: "instructor", label: "Ausbilder-Bereich", icon: Settings });
-    }
-    
-    return commonItems;
+    return NAV_CONFIG.filter(item => 
+      item.allowedRoles.includes(currentUser.role)
+    ).map(item => ({
+      id: item.id,
+      label: item.label,
+      icon: item.id === 'chat' ? MessageSquare : 
+            item.id.includes('ausbilder') ? Settings : BarChart3
+    }));
   };
 
   const NavItems = ({ mobile = false }) => (
