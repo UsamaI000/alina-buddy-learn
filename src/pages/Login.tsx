@@ -18,7 +18,11 @@ interface LoginProps {
 
 export default function Login({ onLogin, onBack, language }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [loginData, setLoginData] = useState({ 
+    email: "", 
+    password: "", 
+    role: "student" as "student" | "instructor" 
+  });
   const [registerData, setRegisterData] = useState({
     email: "",
     password: "",
@@ -260,6 +264,22 @@ export default function Login({ onLogin, onBack, language }: LoginProps) {
                       placeholder="max.mustermann@beispiel.de"
                       required
                     />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="login-role">{t.role}</Label>
+                    <Select
+                      value={loginData.role}
+                      onValueChange={(value) => setLoginData({...loginData, role: value as "student" | "instructor"})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">{t.student}</SelectItem>
+                        <SelectItem value="instructor">{t.instructor}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <div className="space-y-2">
