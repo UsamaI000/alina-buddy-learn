@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, BookOpen, BarChart3, Settings, FileText, Calendar } from 'lucide-react';
 import type { AppUser } from '@/types/auth';
+import StudentsManagement from './StudentsManagement';
+import LearningModulesManagement from './LearningModulesManagement';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
 interface AusbilderDashboardProps {
   user: AppUser;
@@ -11,6 +14,7 @@ interface AusbilderDashboardProps {
 }
 
 export default function AusbilderDashboard({ user, language }: AusbilderDashboardProps) {
+  const [currentView, setCurrentView] = useState<'dashboard' | 'students' | 'modules' | 'analytics'>('dashboard');
   const t = {
     de: {
       title: 'Ausbilder Dashboard',
@@ -31,6 +35,19 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
   };
 
   const texts = t[language as keyof typeof t] || t.de;
+
+  // Render different views based on currentView state
+  if (currentView === 'students') {
+    return <StudentsManagement user={user} language={language} onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'modules') {
+    return <LearningModulesManagement user={user} language={language} onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'analytics') {
+    return <AnalyticsDashboard user={user} language={language} onBack={() => setCurrentView('dashboard')} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,7 +78,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
               <p className="text-sm text-muted-foreground mb-4">
                 Verwalte deine Auszubildenden und deren Fortschritt.
               </p>
-              <Button className="w-full">
+              <Button className="w-full" onClick={() => setCurrentView('students')}>
                 {texts.manageStudents}
               </Button>
             </CardContent>
@@ -79,7 +96,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
               <p className="text-sm text-muted-foreground mb-4">
                 Erstelle und bearbeite Lerninhalte und Materialien.
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setCurrentView('modules')}>
                 {texts.manageContent}
               </Button>
             </CardContent>
@@ -97,7 +114,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
               <p className="text-sm text-muted-foreground mb-4">
                 Analysiere Lernfortschritte und Leistungen.
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setCurrentView('analytics')}>
                 {texts.viewAnalytics}
               </Button>
             </CardContent>
