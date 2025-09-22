@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/auth/ResetPassword";
+import VerifyEmail from "./pages/auth/VerifyEmail";
 import ChatInterface from "./components/ChatInterface";
 import Dashboard from "./components/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -115,7 +117,22 @@ const App = () => {
           <Login
             onLogin={handleLogin}
             onBack={() => setCurrentPage("home")}
+            onNavigate={handleNavigate}
             language={currentLanguage}
+          />
+        );
+      case "reset-password":
+        return (
+          <ResetPassword 
+            onBack={() => setCurrentPage("login")} 
+            language={currentLanguage} 
+          />
+        );
+      case "verify-email":
+        return (
+          <VerifyEmail 
+            onBack={() => setCurrentPage("login")} 
+            language={currentLanguage} 
           />
         );
       case "chat":
@@ -136,6 +153,7 @@ const App = () => {
           <Login
             onLogin={handleLogin}
             onBack={() => setCurrentPage("home")}
+            onNavigate={handleNavigate}
             language={currentLanguage}
           />
         );
@@ -155,6 +173,7 @@ const App = () => {
           <Login
             onLogin={handleLogin}
             onBack={() => setCurrentPage("home")}
+            onNavigate={handleNavigate}
             language={currentLanguage}
           />
         );
@@ -205,6 +224,7 @@ const App = () => {
           <Login
             onLogin={handleLogin}
             onBack={() => setCurrentPage("home")}
+            onNavigate={handleNavigate}
             language={currentLanguage}
           />
         );
