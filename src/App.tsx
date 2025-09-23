@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import ChatInterface from "./components/ChatInterface";
@@ -15,79 +16,44 @@ import NotFound from "./pages/NotFound";
 import AzubiHome from "./pages/azubi/AzubiHome";
 import AusbilderDashboard from "./pages/ausbilder/AusbilderDashboard";
 import { RouteGuard } from "./components/RouteGuard";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import { ProfileCompletionBanner } from "./components/auth/ProfileCompletionBanner";
+import { WelcomeTour } from "./components/auth/WelcomeTour";
+import { useAuthSession } from "./hooks/useAuthSession";
 import type { AppUser, UserRole } from "@/types/auth";
-import { mapLegacyRole, getRoleBasedRedirect } from "@/utils/auth";
+import { getRoleBasedRedirect } from "@/utils/auth";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const { user: currentUser, session, loading, signOut } = useAuthSession();
   const [currentPage, setCurrentPage] = useState("home");
   const [currentLanguage, setCurrentLanguage] = useState("de");
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user profile (defer to avoid deadlocks)
-          setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user!.id)
-              .single();
-
-            if (profile) {
-              const userRole = profile.role as UserRole;
-              const appUser: AppUser = {
-                id: session.user!.id,
-                name: `${profile.first_name} ${profile.last_name}`,
-                role: userRole,
-                apprenticeship: profile.apprenticeship || "",
-                email: session.user!.email || ""
-              };
-              setCurrentUser(appUser);
-              
-              // Redirect to role-specific dashboard
-              const redirectPath = getRoleBasedRedirect(userRole);
-              setCurrentPage(redirectPath === '/azubi/home' ? 'azubi-home' : 'ausbilder-dashboard');
-            }
-          }, 0);
-        } else {
-          setCurrentUser(null);
-          setCurrentPage("home");
-        }
-        setLoading(false);
+    if (currentUser && !loading) {
+      // Check if user just logged in and should see welcome tour
+      const hasSeenTour = localStorage.getItem(`alina_tour_completed_${currentUser.id}`) === 'true';
+      if (!hasSeenTour) {
+        setShowWelcomeTour(true);
       }
-    );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+      // Auto-redirect to role-specific dashboard if on home page
+      if (currentPage === "home") {
+        const redirectPath = getRoleBasedRedirect(currentUser.role);
+        setCurrentPage(redirectPath === '/azubi/home' ? 'azubi-home' : 'ausbilder-dashboard');
+      }
+    }
+  }, [currentUser, loading, currentPage]);
 
   const handleLogin = (user: AppUser) => {
-    setCurrentUser(user);
-    setCurrentPage("dashboard");
+    // Login is now handled by useAuthSession hook
+    const redirectPath = getRoleBasedRedirect(user.role);
+    setCurrentPage(redirectPath === '/azubi/home' ? 'azubi-home' : 'ausbilder-dashboard');
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setCurrentUser(null);
+    await signOut();
     setCurrentPage("home");
   };
 
@@ -111,6 +77,9 @@ const App = () => {
   }
 
   const renderPage = () => {
+    // Show profile completion banner for authenticated pages
+    const showProfileBanner = currentUser && !['login', 'reset-password', 'verify-email', 'home', 'profile'].includes(currentPage);
+
     switch (currentPage) {
       case "login":
         return (
@@ -135,6 +104,26 @@ const App = () => {
             language={currentLanguage} 
           />
         );
+      case "profile":
+        return currentUser ? (
+          <div>
+            <Navigation
+              currentUser={currentUser}
+              currentPage={currentPage}
+              onNavigate={handleNavigate}
+              onLanguageChange={setCurrentLanguage}
+              currentLanguage={currentLanguage}
+            />
+            <Profile user={currentUser} language={currentLanguage} />
+          </div>
+        ) : (
+          <Login
+            onLogin={handleLogin}
+            onBack={() => setCurrentPage("home")}
+            onNavigate={handleNavigate}
+            language={currentLanguage}
+          />
+        );
       case "chat":
         return currentUser ? (
           <div className="h-screen flex flex-col">
@@ -145,6 +134,15 @@ const App = () => {
               onLanguageChange={setCurrentLanguage}
               currentLanguage={currentLanguage}
             />
+            {showProfileBanner && (
+              <div className="container mx-auto px-4 pt-4">
+                <ProfileCompletionBanner
+                  user={currentUser}
+                  onNavigateToProfile={() => setCurrentPage("profile")}
+                  language={currentLanguage}
+                />
+              </div>
+            )}
             <div className="flex-1">
               <ChatInterface language={currentLanguage} />
             </div>
@@ -167,6 +165,15 @@ const App = () => {
               onLanguageChange={setCurrentLanguage}
               currentLanguage={currentLanguage}
             />
+            {showProfileBanner && (
+              <div className="container mx-auto px-4 pt-4">
+                <ProfileCompletionBanner
+                  user={currentUser}
+                  onNavigateToProfile={() => setCurrentPage("profile")}
+                  language={currentLanguage}
+                />
+              </div>
+            )}
             <Dashboard user={currentUser} language={currentLanguage} />
           </div>
         ) : (
@@ -188,6 +195,15 @@ const App = () => {
                 onLanguageChange={setCurrentLanguage}
                 currentLanguage={currentLanguage}
               />
+              {showProfileBanner && (
+                <div className="container mx-auto px-4 pt-4">
+                  <ProfileCompletionBanner
+                    user={currentUser!}
+                    onNavigateToProfile={() => setCurrentPage("profile")}
+                    language={currentLanguage}
+                  />
+                </div>
+              )}
               <AzubiHome user={currentUser!} language={currentLanguage} />
             </div>
           </RouteGuard>
@@ -203,6 +219,15 @@ const App = () => {
                 onLanguageChange={setCurrentLanguage}
                 currentLanguage={currentLanguage}
               />
+              {showProfileBanner && (
+                <div className="container mx-auto px-4 pt-4">
+                  <ProfileCompletionBanner
+                    user={currentUser!}
+                    onNavigateToProfile={() => setCurrentPage("profile")}
+                    language={currentLanguage}
+                  />
+                </div>
+              )}
               <AusbilderDashboard user={currentUser!} language={currentLanguage} />
             </div>
           </RouteGuard>
@@ -250,6 +275,14 @@ const App = () => {
             <Route path="/" element={renderPage()} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          
+          {showWelcomeTour && currentUser && (
+            <WelcomeTour
+              user={currentUser}
+              language={currentLanguage}
+              onComplete={() => setShowWelcomeTour(false)}
+            />
+          )}
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
