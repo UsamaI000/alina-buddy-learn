@@ -14,89 +14,54 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
+    if (!messages || !Array.isArray(messages)) {
+      throw new Error('Messages array is required');
+    }
+
+    // Get user profile for context
+    const authHeader = req.headers.get('Authorization');
+    let userContext = '';
+    
+    if (authHeader) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
+      );
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      
+      if (user) {
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('first_name, last_name, apprenticeship, company')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile) {
+          userContext = `\n\nUser Context: ${profile.first_name} ${profile.last_name}, ${profile.apprenticeship} apprentice at ${profile.company}.`;
+        }
+      }
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Get user context from authorization header
-    const authHeader = req.headers.get('authorization');
-    let userContext = '';
-    
-    if (authHeader) {
-      try {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
-        
-        if (user) {
-          // Fetch user profile and role
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, apprenticeship, company')
-            .eq('user_id', user.id)
-            .single();
-
-          const { data: userRole } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
-          
-          // Fetch user's recent tasks
-          const { data: tasks } = await supabase
-            .from('tasks')
-            .select('title, status, due_date')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(5);
-          
-          // Fetch user's learning modules
-          const { data: modules } = await supabase
-            .from('learning_modules')
-            .select('title')
-            .eq('apprenticeship', profile?.apprenticeship)
-            .limit(5);
-          
-          userContext = `
-User Profile:
-- Name: ${profile?.first_name} ${profile?.last_name}
-- Role: ${userRole?.role === 'AUSZUBILDENDE_R' ? 'Auszubildende/r' : 'Ausbilder/in'}
-- Apprenticeship: ${profile?.apprenticeship || 'Not specified'}
-- Company: ${profile?.company || 'Not specified'}
-
-Recent Tasks: ${tasks?.length ? tasks.map(t => `${t.title} (${t.status})`).join(', ') : 'None'}
-
-Available Learning Modules: ${modules?.length ? modules.map(m => m.title).join(', ') : 'None'}
-`;
-        }
-      } catch (error) {
-        console.error('Error fetching user context:', error);
-      }
-    }
-
-    // System prompt with user context
-    const systemPrompt = `You are ALINA (AI Learning & Integration Assistant), a helpful AI assistant for apprentices and instructors in a German dual education system.
+    // System prompt for ALINA
+    const systemPrompt = `You are ALINA (Adaptive Learning & Interactive Navigation Assistant), an AI assistant designed to support apprentices (Auszubildende) in their vocational training in Germany.
 
 Your role:
-- Help apprentices with their learning modules, tasks, and career development
-- Assist instructors with student management and training planning
-- Provide guidance on German apprenticeship regulations and best practices
-- Answer questions in a friendly, supportive manner
-- Always respond in German when appropriate, but support other languages too
+- Help with learning modules, assignments, and vocational training questions
+- Provide guidance on German apprenticeship systems (duale Ausbildung)
+- Answer questions about tasks, deadlines, and learning materials
+- Be encouraging, patient, and supportive
+- Respond in German when appropriate, but can switch to English if requested
+- Reference the user's specific apprenticeship when giving advice${userContext}
 
-${userContext ? `Current User Context:\n${userContext}` : ''}
-
-Guidelines:
-- Keep responses concise and actionable
-- Reference the user's specific context when relevant (their tasks, modules, role)
-- For complex topics, break down information into digestible steps
-- Encourage learning and professional growth
-- Be empathetic and understanding of apprenticeship challenges`;
+Keep responses clear, concise, and actionable. If you don't know something specific to their training, encourage them to consult their Ausbilder (trainer).`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -130,13 +95,13 @@ Guidelines:
       
       const errorText = await response.text();
       console.error('AI Gateway error:', response.status, errorText);
-      throw new Error('AI service error');
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
-    // Return the streaming response
+    // Stream the response back to the client
     return new Response(response.body, {
-      headers: { 
-        ...corsHeaders, 
+      headers: {
+        ...corsHeaders,
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
@@ -144,10 +109,13 @@ Guidelines:
     });
 
   } catch (error) {
-    console.error('Chat error:', error);
+    console.error('Error in alina-chat function:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   }
 });
