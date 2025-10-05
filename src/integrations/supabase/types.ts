@@ -154,6 +154,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -161,10 +182,18 @@ export type Database = {
     Functions: {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["user_role"]
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
+      app_role: "AUSZUBILDENDE_R" | "AUSBILDER_IN"
       task_status: "OPEN" | "IN_PROGRESS" | "DONE"
       user_role: "AUSZUBILDENDE_R" | "AUSBILDER_IN"
     }
@@ -294,6 +323,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["AUSZUBILDENDE_R", "AUSBILDER_IN"],
       task_status: ["OPEN", "IN_PROGRESS", "DONE"],
       user_role: ["AUSZUBILDENDE_R", "AUSBILDER_IN"],
     },
