@@ -59,11 +59,14 @@ export default function StudentsManagement({ user, language, onBack }: StudentsM
     try {
       setLoading(true);
       
-      // Fetch all students (users with role AUSZUBILDENDE_R)
+      // Fetch all students (users with role AUSZUBILDENDE_R from user_roles table)
       const { data: studentsData, error: studentsError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('role', 'AUSZUBILDENDE_R');
+        .select(`
+          *,
+          user_roles!inner(role)
+        `)
+        .eq('user_roles.role', 'AUSZUBILDENDE_R');
 
       if (studentsError) throw studentsError;
 
