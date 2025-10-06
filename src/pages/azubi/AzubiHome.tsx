@@ -24,6 +24,11 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
   const { tasks, loading: tasksLoading, updateTaskStatus } = useTasks();
   const { events, loading: eventsLoading } = useEvents();
 
+  // Sort modules by created_at (newest first) for dashboard display
+  const recentModules = [...modules]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3);
+
   const t = {
     de: {
       title: 'Willkommen zurück',
@@ -118,7 +123,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {modules.slice(0, 3).map((module) => (
+                {recentModules.map((module) => (
                   <LearningModuleCard
                     key={module.id}
                     module={module}

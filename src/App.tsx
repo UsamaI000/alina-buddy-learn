@@ -14,6 +14,7 @@ import ChatInterface from "./components/ChatInterface";
 import Dashboard from "./components/Dashboard";
 import NotFound from "./pages/NotFound";
 import AzubiHome from "./pages/azubi/AzubiHome";
+import LearningModules from "./pages/azubi/LearningModules";
 import AusbilderDashboard from "./pages/ausbilder/AusbilderDashboard";
 import { RouteGuard } from "./components/RouteGuard";
 import { ProfileCompletionBanner } from "./components/auth/ProfileCompletionBanner";
@@ -205,6 +206,30 @@ const App = () => {
                 </div>
               )}
               <AzubiHome user={currentUser!} language={currentLanguage} />
+            </div>
+          </RouteGuard>
+        );
+      case "azubi-learning-modules":
+        return (
+          <RouteGuard requiredRoles={['AUSZUBILDENDE_R']}>
+            <div>
+              <Navigation
+                currentUser={currentUser}
+                currentPage={currentPage}
+                onNavigate={handleNavigate}
+                onLanguageChange={setCurrentLanguage}
+                currentLanguage={currentLanguage}
+              />
+              {showProfileBanner && (
+                <div className="container mx-auto px-4 pt-4">
+                  <ProfileCompletionBanner
+                    user={currentUser!}
+                    onNavigateToProfile={() => setCurrentPage("profile")}
+                    language={currentLanguage}
+                  />
+                </div>
+              )}
+              <LearningModules user={currentUser!} language={currentLanguage} />
             </div>
           </RouteGuard>
         );
