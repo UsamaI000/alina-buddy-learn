@@ -1,8 +1,10 @@
 import { BookOpen } from 'lucide-react';
-import { LearningModuleCard } from '@/components/LearningModuleCard';
 import { useLearningModules } from '@/hooks/useLearningModules';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { AppUser } from '@/types/auth';
 
 interface LearningModulesProps {
@@ -24,12 +26,28 @@ export default function LearningModules({ user, language }: LearningModulesProps
       subtitle: 'Übersicht aller verfügbaren Lernmodule für',
       noModules: 'Keine Lernmodule verfügbar',
       noModulesDesc: 'Es wurden noch keine Lernmodule für deine Ausbildung erstellt.',
+      tableHeaders: {
+        title: 'Titel',
+        apprenticeship: 'Ausbildung',
+        description: 'Beschreibung',
+        createdAt: 'Erstellt am',
+        actions: 'Aktionen'
+      },
+      startButton: 'Lernen starten'
     },
     en: {
       title: 'All Learning Modules',
       subtitle: 'Overview of all available learning modules for',
       noModules: 'No learning modules available',
       noModulesDesc: 'No learning modules have been created for your apprenticeship yet.',
+      tableHeaders: {
+        title: 'Title',
+        apprenticeship: 'Apprenticeship',
+        description: 'Description',
+        createdAt: 'Created at',
+        actions: 'Actions'
+      },
+      startButton: 'Start learning'
     }
   };
 
@@ -49,29 +67,79 @@ export default function LearningModules({ user, language }: LearningModulesProps
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-3/4 mb-4" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-2/3 mb-4" />
-                  <Skeleton className="h-10 w-32" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.tableHeaders.title}</TableHead>
+                    <TableHead>{t.tableHeaders.apprenticeship}</TableHead>
+                    <TableHead className="hidden md:table-cell">{t.tableHeaders.description}</TableHead>
+                    <TableHead>{t.tableHeaders.createdAt}</TableHead>
+                    <TableHead>{t.tableHeaders.actions}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-9 w-28" /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         ) : modules.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {modules.map((module) => (
-              <LearningModuleCard
-                key={module.id}
-                module={module}
-                onStart={handleStartModule}
-              />
-            ))}
-          </div>
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.tableHeaders.title}</TableHead>
+                    <TableHead>{t.tableHeaders.apprenticeship}</TableHead>
+                    <TableHead className="hidden md:table-cell">{t.tableHeaders.description}</TableHead>
+                    <TableHead>{t.tableHeaders.createdAt}</TableHead>
+                    <TableHead>{t.tableHeaders.actions}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modules.map((module) => (
+                    <TableRow key={module.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span className="font-medium">{module.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{module.apprenticeship}</Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell max-w-md">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {module.description || 'Keine Beschreibung verfügbar'}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(module.created_at).toLocaleDateString('de-DE')}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleStartModule(module.id)}
+                        >
+                          {t.startButton}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         ) : (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
