@@ -49,7 +49,13 @@ export const NAV_CONFIG = [
     path: '/azubi/learning-modules'
   },
   {
-    id: 'ausbilder-dashboard', 
+    id: 'azubi-calendar',
+    label: 'Kalender',
+    allowedRoles: ['AUSZUBILDENDE_R'] as UserRole[],
+    path: '/azubi/calendar'
+  },
+  {
+    id: 'ausbilder-dashboard',
     label: 'Ausbilder Dashboard',
     allowedRoles: ['AUSBILDER_IN'] as UserRole[],
     path: '/ausbilder/dashboard'
