@@ -52,5 +52,57 @@ export function useTasks() {
     }
   };
 
-  return { tasks, loading, error, updateTaskStatus };
+  const createTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert(taskData)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      if (data) {
+        setTasks(prev => [...prev, data]);
+      }
+      return { data, error: null };
+    } catch (err: any) {
+      return { data: null, error: err };
+    }
+  };
+
+  const updateTask = async (taskId: string, updates: Partial<Task>) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      if (data) {
+        setTasks(prev => prev.map(t => t.id === taskId ? data : t));
+      }
+      return { data, error: null };
+    } catch (err: any) {
+      return { data: null, error: err };
+    }
+  };
+
+  const deleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      return { error: null };
+    } catch (err: any) {
+      return { error: err };
+    }
+  };
+
+  return { tasks, loading, error, updateTaskStatus, createTask, updateTask, deleteTask };
 }

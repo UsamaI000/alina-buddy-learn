@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, BookOpen, BarChart3, Settings, FileText, Calendar } from 'lucide-react';
+import { Users, BookOpen, BarChart3, Settings, FileText, Calendar, CheckSquare } from 'lucide-react';
 import type { AppUser } from '@/types/auth';
 import StudentsManagement from './StudentsManagement';
 import LearningModulesManagement from './LearningModulesManagement';
 import AnalyticsDashboard from './AnalyticsDashboard';
+import AusbilderCalendar from './AusbilderCalendar';
+import TaskAssignment from './TaskAssignment';
 
 interface AusbilderDashboardProps {
   user: AppUser;
@@ -14,7 +16,7 @@ interface AusbilderDashboardProps {
 }
 
 export default function AusbilderDashboard({ user, language }: AusbilderDashboardProps) {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'students' | 'modules' | 'analytics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'students' | 'modules' | 'analytics' | 'calendar' | 'tasks'>('dashboard');
   const t = {
     de: {
       title: 'Ausbilder Dashboard',
@@ -25,12 +27,14 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
       settings: 'Einstellungen',
       exams: 'Prüfungen',
       calendar: 'Kalender',
+      tasks: 'Aufgaben',
       manageStudents: 'Auszubildende verwalten',
       manageContent: 'Inhalte verwalten',
       viewAnalytics: 'Statistiken ansehen',
       openSettings: 'Einstellungen öffnen',
       createExam: 'Prüfung erstellen',
-      viewCalendar: 'Kalender öffnen'
+      viewCalendar: 'Kalender öffnen',
+      manageTasks: 'Aufgaben zuweisen'
     }
   };
 
@@ -47,6 +51,14 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
 
   if (currentView === 'analytics') {
     return <AnalyticsDashboard user={user} language={language} onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'calendar') {
+    return <AusbilderCalendar user={user} language={language} onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'tasks') {
+    return <TaskAssignment user={user} language={language} onBack={() => setCurrentView('dashboard')} />;
   }
 
   return (
@@ -150,8 +162,26 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
               <p className="text-sm text-muted-foreground mb-4">
                 Plane Termine und Lehreinheiten.
               </p>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setCurrentView('calendar')}>
                 {texts.viewCalendar}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Tasks */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckSquare className="h-5 w-5 text-primary" />
+                {texts.tasks}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Erstelle und weise Aufgaben an Auszubildende zu.
+              </p>
+              <Button variant="outline" className="w-full" onClick={() => setCurrentView('tasks')}>
+                {texts.manageTasks}
               </Button>
             </CardContent>
           </Card>

@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           description: string | null
           end_time: string
+          event_type: Database["public"]["Enums"]["event_type"] | null
           id: string
           start_time: string
           title: string
@@ -29,6 +30,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_time: string
+          event_type?: Database["public"]["Enums"]["event_type"] | null
           id?: string
           start_time: string
           title: string
@@ -39,6 +41,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_time?: string
+          event_type?: Database["public"]["Enums"]["event_type"] | null
           id?: string
           start_time?: string
           title?: string
@@ -194,6 +197,7 @@ export type Database = {
     }
     Enums: {
       app_role: "AUSZUBILDENDE_R" | "AUSBILDER_IN"
+      event_type: "exam" | "training" | "meeting" | "other"
       task_status: "OPEN" | "IN_PROGRESS" | "DONE"
       user_role: "AUSZUBILDENDE_R" | "AUSBILDER_IN"
     }
@@ -324,6 +328,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["AUSZUBILDENDE_R", "AUSBILDER_IN"],
+      event_type: ["exam", "training", "meeting", "other"],
       task_status: ["OPEN", "IN_PROGRESS", "DONE"],
       user_role: ["AUSZUBILDENDE_R", "AUSBILDER_IN"],
     },
