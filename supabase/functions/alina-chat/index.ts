@@ -33,14 +33,47 @@ serve(async (req) => {
       const { data: { user } } = await supabaseClient.auth.getUser();
       
       if (user) {
+        // Get user profile
         const { data: profile } = await supabaseClient
           .from('profiles')
           .select('first_name, last_name, apprenticeship, company')
           .eq('user_id', user.id)
           .single();
 
+        // Get active learning modules
+        const { data: modules } = await supabaseClient
+          .from('learning_modules')
+          .select('title, description, status')
+          .eq('target_apprenticeship', profile?.apprenticeship || '')
+          .limit(5);
+
+        // Get open tasks
+        const { data: tasks } = await supabaseClient
+          .from('tasks')
+          .select('title, description, status, due_date, learning_modules(title)')
+          .eq('user_id', user.id)
+          .in('status', ['OPEN', 'IN_PROGRESS'])
+          .order('due_date', { ascending: true })
+          .limit(5);
+
         if (profile) {
           userContext = `\n\nUser Context: ${profile.first_name} ${profile.last_name}, ${profile.apprenticeship} apprentice at ${profile.company}.`;
+          
+          if (modules && modules.length > 0) {
+            userContext += `\n\nCurrent Learning Modules:`;
+            modules.forEach(mod => {
+              userContext += `\n- ${mod.title} (${mod.status}): ${mod.description?.substring(0, 100) || 'No description'}`;
+            });
+          }
+          
+          if (tasks && tasks.length > 0) {
+            userContext += `\n\nOpen Tasks:`;
+            tasks.forEach(task => {
+              const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('de-DE') : 'No due date';
+              const moduleName = task.learning_modules?.title || 'No module';
+              userContext += `\n- ${task.title} (${task.status}, due: ${dueDate}, module: ${moduleName})`;
+            });
+          }
         }
       }
     }
