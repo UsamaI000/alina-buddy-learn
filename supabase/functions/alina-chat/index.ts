@@ -63,7 +63,7 @@ serve(async (req) => {
         // Get open tasks
         const { data: tasks, error: tasksError } = await supabaseClient
           .from('tasks')
-          .select('title, description, status, due_date, learning_modules(title)')
+          .select('title, description, status, due_date')
           .eq('user_id', user.id)
           .in('status', ['OPEN', 'IN_PROGRESS'])
           .order('due_date', { ascending: true })
@@ -75,13 +75,12 @@ serve(async (req) => {
           console.log('Tasks fetched:', tasks?.length || 0);
         }
 
-        // Get upcoming exam dates
+        // Get upcoming exam dates (robust: by type OR title keywords)
         const { data: exams, error: examsError } = await supabaseClient
           .from('events')
           .select('title, description, event_type, start_time, end_time')
           .eq('user_id', user.id)
-          .eq('event_type', 'exam')
-          .gte('start_time', new Date().toISOString())
+          .or('event_type.eq.exam,title.ilike.*prüf*,title.ilike.*pruef*,title.ilike.*exam*')
           .order('start_time', { ascending: true })
           .limit(10);
 
@@ -107,8 +106,7 @@ serve(async (req) => {
             userContext += `\n\nCurrent Tasks (${tasks.length} open/in progress):`;
             tasks.forEach(task => {
               const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('de-DE') : 'No deadline';
-              const moduleName = task.learning_modules?.title || 'No module assigned';
-              userContext += `\n- "${task.title}" | Status: ${task.status} | Due: ${dueDate} | Module: ${moduleName}`;
+              userContext += `\n- "${task.title}" | Status: ${task.status} | Due: ${dueDate}`;
             });
           } else {
             userContext += `\n\nNo open tasks at the moment.`;

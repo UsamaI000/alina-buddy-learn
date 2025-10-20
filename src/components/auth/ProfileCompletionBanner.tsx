@@ -38,30 +38,31 @@ export function ProfileCompletionBanner({ user, onNavigateToProfile, language }:
   const texts = t[language as keyof typeof t] || t.de;
 
   useEffect(() => {
+    const loc = t[language as keyof typeof t] || t.de;
     // Check what profile information is missing
     const items: CompletionItem[] = [
       {
         id: 'email_verified',
-        label: texts.emailVerified,
+        label: loc.emailVerified,
         completed: true, // Assume verified for now
         icon: <Mail className="h-4 w-4" />
       },
       {
         id: 'personal_info',
-        label: texts.personalInfo,
+        label: loc.personalInfo,
         completed: !!(user.name && user.name.trim()),
         icon: <User className="h-4 w-4" />
       },
       {
         id: 'company_info',
-        label: texts.companyInfo,
+        label: loc.companyInfo,
         completed: !!(user.apprenticeship && user.apprenticeship.trim()),
         icon: <Building className="h-4 w-4" />
       }
     ];
 
     setCompletionItems(items);
-  }, [user, texts]);
+  }, [user, language]);
 
   const completedCount = completionItems.filter(item => item.completed).length;
   const totalCount = completionItems.length;
