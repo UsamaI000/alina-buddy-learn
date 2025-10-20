@@ -75,6 +75,22 @@ serve(async (req) => {
           console.log('Tasks fetched:', tasks?.length || 0);
         }
 
+        // Get upcoming exam dates
+        const { data: exams, error: examsError } = await supabaseClient
+          .from('events')
+          .select('title, description, event_type, start_time, end_time')
+          .eq('user_id', user.id)
+          .eq('event_type', 'exam')
+          .gte('start_time', new Date().toISOString())
+          .order('start_time', { ascending: true })
+          .limit(10);
+
+        if (examsError) {
+          console.error('Exams fetch error:', examsError);
+        } else {
+          console.log('Exams fetched:', exams?.length || 0);
+        }
+
         if (profile) {
           userContext = `\n\nUser Profile:\n- Name: ${profile.first_name} ${profile.last_name}\n- Apprenticeship: ${profile.apprenticeship || 'Not specified'}\n- Company: ${profile.company || 'Not specified'}`;
           
@@ -97,6 +113,23 @@ serve(async (req) => {
           } else {
             userContext += `\n\nNo open tasks at the moment.`;
           }
+
+          if (exams && exams.length > 0) {
+            userContext += `\n\nUpcoming Exams (${exams.length} scheduled):`;
+            exams.forEach(exam => {
+              const examDate = new Date(exam.start_time).toLocaleDateString('de-DE', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              userContext += `\n- "${exam.title}" on ${examDate}${exam.description ? ' - ' + exam.description : ''}`;
+            });
+          } else {
+            userContext += `\n\nNo upcoming exams scheduled.`;
+          }
         }
         
         console.log('Final user context length:', userContext.length);
@@ -115,17 +148,19 @@ Your role:
 - Help with learning modules, assignments, and vocational training questions
 - Provide guidance on German apprenticeship systems (duale Ausbildung)
 - Answer questions about tasks, deadlines, and learning materials
+- Help with exam preparation and remind about upcoming exams
 - Be encouraging, patient, and supportive
 - Respond in German when appropriate, but can switch to English if requested
-- Always reference the user's current situation (their profile, learning modules, and tasks) when giving advice
-- If asked about learning progress or tasks, use the specific information provided in the context
+- Always reference the user's current situation (their profile, learning modules, tasks, and exams) when giving advice
+- If asked about learning progress, tasks, or exams, use the specific information provided in the context
 
 IMPORTANT: You have access to the user's:
 - Personal profile information
 - Available learning modules
 - Current tasks and their status
+- Upcoming exam dates and times
 
-Use this information actively when the user asks about their learning progress, tasks, or modules.${userContext}
+Use this information actively when the user asks about their learning progress, tasks, modules, or exams.${userContext}
 
 Keep responses clear, concise, and actionable. If you don't know something specific to their training, encourage them to consult their Ausbilder (trainer).`;
 
