@@ -50,6 +50,56 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          content: string
+          created_at: string
+          created_by: string
+          embedding: string | null
+          id: string
+          learning_module_id: string | null
+          metadata: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          content: string
+          created_at?: string
+          created_by: string
+          embedding?: string | null
+          id?: string
+          learning_module_id?: string | null
+          metadata?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          embedding?: string | null
+          id?: string
+          learning_module_id?: string | null
+          metadata?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_learning_module_id_fkey"
+            columns: ["learning_module_id"]
+            isOneToOne: false
+            referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_modules: {
         Row: {
           apprenticeship: string
@@ -193,6 +243,22 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      match_knowledge_base: {
+        Args: {
+          filter?: Json
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          chunk_text: string
+          id: string
+          learning_module_id: string
+          metadata: Json
+          similarity: number
+          title: string
+        }[]
       }
     }
     Enums: {

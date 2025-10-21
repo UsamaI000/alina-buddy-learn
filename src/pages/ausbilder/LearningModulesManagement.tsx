@@ -5,9 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BookOpen, Plus, Edit, Trash2, ArrowLeft, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookOpen, Plus, Edit, Trash2, ArrowLeft, Search, Database } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { KnowledgeBaseManager } from '@/components/KnowledgeBaseManager';
 import type { AppUser } from '@/types/auth';
 
 interface LearningModule {
@@ -31,6 +33,7 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<LearningModule | null>(null);
+  const [selectedModule, setSelectedModule] = useState<LearningModule | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -55,7 +58,10 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
       edit: 'Bearbeiten',
       noModules: 'Keine Lernmodule gefunden',
       created: 'Erstellt',
-      updated: 'Aktualisiert'
+      updated: 'Aktualisiert',
+      tabModules: 'Module verwalten',
+      tabKnowledge: 'Wissensdatenbank',
+      selectModuleFirst: 'Bitte wähle zuerst ein Lernmodul aus, um Wissensartikel hinzuzufügen.'
     }
   };
 
@@ -281,61 +287,106 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
           </div>
         </div>
 
-        {filteredModules.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">{texts.noModules}</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredModules.map((module) => (
-              <Card key={module.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-primary" />
-                      <span className="truncate">{module.title}</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(module)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(module.id)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Badge variant="secondary">{module.apprenticeship}</Badge>
-                  
-                  {module.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {module.description}
-                    </p>
-                  )}
-                  
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <div>{texts.created}: {new Date(module.created_at).toLocaleDateString('de-DE')}</div>
-                    <div>{texts.updated}: {new Date(module.updated_at).toLocaleDateString('de-DE')}</div>
-                  </div>
+        <Tabs defaultValue="modules" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="modules" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              {texts.tabModules}
+            </TabsTrigger>
+            <TabsTrigger value="knowledge" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              {texts.tabKnowledge}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="modules" className="mt-6">
+            {filteredModules.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">{texts.noModules}</p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredModules.map((module) => (
+                  <Card 
+                    key={module.id} 
+                    className={`hover:shadow-lg transition-shadow cursor-pointer ${
+                      selectedModule?.id === module.id ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => setSelectedModule(module)}
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-5 w-5 text-primary" />
+                          <span className="truncate">{module.title}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(module);
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(module.id);
+                            }}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Badge variant="secondary">{module.apprenticeship}</Badge>
+                      
+                      {module.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {module.description}
+                        </p>
+                      )}
+                      
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div>{texts.created}: {new Date(module.created_at).toLocaleDateString('de-DE')}</div>
+                        <div>{texts.updated}: {new Date(module.updated_at).toLocaleDateString('de-DE')}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="knowledge" className="mt-6">
+            {selectedModule ? (
+              <KnowledgeBaseManager 
+                learningModuleId={selectedModule.id}
+                learningModuleName={selectedModule.title}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Database className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-center">
+                    {texts.selectModuleFirst}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

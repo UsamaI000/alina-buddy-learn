@@ -134,6 +134,99 @@ serve(async (req) => {
       }
     }
 
+    // === RAG RETRIEVAL ===
+    let ragContext = '';
+    
+    if (authHeader && messages.length > 0) {
+      const lastUserMessage = messages[messages.length - 1];
+      
+      if (lastUserMessage.role === 'user') {
+        try {
+          const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+          
+          if (OPENAI_API_KEY) {
+            console.log('Generating embedding for user query...');
+            
+            // 1. Generate embedding for user's question
+            const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'text-embedding-3-small',
+                input: lastUserMessage.content,
+              }),
+            });
+
+            if (embeddingResponse.ok) {
+              const embeddingData = await embeddingResponse.json();
+              const queryEmbedding = embeddingData.data[0].embedding;
+              
+              console.log('Embedding generated, searching knowledge base...');
+
+              // 2. Search knowledge base
+              const supabaseClient = createClient(
+                Deno.env.get('SUPABASE_URL') ?? '',
+                Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+                { global: { headers: { Authorization: authHeader } } }
+              );
+
+              const { data: { user } } = await supabaseClient.auth.getUser();
+              
+              // Get user's apprenticeship for filtering (if available)
+              let filter = {};
+              if (user) {
+                const { data: profile } = await supabaseClient
+                  .from('profiles')
+                  .select('apprenticeship')
+                  .eq('user_id', user.id)
+                  .maybeSingle();
+                
+                if (profile?.apprenticeship) {
+                  filter = { apprenticeship: profile.apprenticeship };
+                }
+              }
+
+              const { data: knowledgeResults, error: kbError } = await supabaseClient
+                .rpc('match_knowledge_base', {
+                  query_embedding: queryEmbedding,
+                  match_threshold: 0.7,
+                  match_count: 3,
+                  filter: filter
+                });
+
+              if (!kbError && knowledgeResults && knowledgeResults.length > 0) {
+                console.log(`RAG: Found ${knowledgeResults.length} relevant chunks`);
+                
+                ragContext = '\n\n=== RELEVANT KNOWLEDGE FROM LEARNING MATERIALS ===\n';
+                ragContext += 'The following curated information is directly from your learning materials. Use this as your PRIMARY source for answers:\n\n';
+                
+                knowledgeResults.forEach((result: any, idx: number) => {
+                  ragContext += `[Source ${idx + 1}] ${result.title}\n`;
+                  ragContext += `${result.chunk_text}\n`;
+                  ragContext += `(Relevance: ${(result.similarity * 100).toFixed(1)}%)\n\n`;
+                });
+
+                ragContext += '=== END OF KNOWLEDGE BASE ===\n';
+                ragContext += 'IMPORTANT: Base your answer primarily on the knowledge base above. If the answer is not in the knowledge base, clearly state this and provide general guidance instead.\n';
+              } else {
+                console.log('RAG: No relevant knowledge found in database');
+              }
+            } else {
+              console.error('Failed to generate embedding:', embeddingResponse.status);
+            }
+          } else {
+            console.log('RAG: OPENAI_API_KEY not configured, skipping RAG');
+          }
+        } catch (ragError) {
+          console.error('RAG retrieval error:', ragError);
+          // Don't fail the entire request if RAG fails
+        }
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
@@ -159,6 +252,8 @@ IMPORTANT: You have access to the user's:
 - Upcoming exam dates and times
 
 Use this information actively when the user asks about their learning progress, tasks, modules, or exams.${userContext}
+
+${ragContext}
 
 Keep responses clear, concise, and actionable. If you don't know something specific to their training, encourage them to consult their Ausbilder (trainer).`;
 
