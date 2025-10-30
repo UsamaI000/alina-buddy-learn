@@ -44,23 +44,34 @@ export function useAuthSession(): AuthSessionState & AuthSessionActions {
 
   const fetchUserProfile = useCallback(async (authUser: User): Promise<AppUser | null> => {
     try {
-      const { data, error } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', authUser.id)
         .single();
 
-      if (error || !data) {
-        console.error('Error fetching user profile:', error);
+      if (profileError || !profile) {
+        console.error('Error fetching user profile:', profileError);
+        return null;
+      }
+
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (roleError || !roleData) {
+        console.error('Error fetching user role:', roleError);
         return null;
       }
 
       return {
         id: authUser.id,
         email: authUser.email || '',
-        name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User',
-        role: data.role,
-        apprenticeship: data.apprenticeship || ''
+        name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
+        role: roleData.role,
+        apprenticeship: profile.apprenticeship || ''
       };
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);

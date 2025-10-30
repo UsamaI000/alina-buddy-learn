@@ -174,10 +174,26 @@ export default function Login({ onLogin, onBack, onNavigate, language }: LoginPr
         return;
       }
 
+      // Fetch user role from user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      if (roleError || !roleData) {
+        toast({
+          variant: "destructive",
+          title: "Rolle nicht gefunden",
+          description: "Ihre Benutzerrolle konnte nicht geladen werden.",
+        });
+        return;
+      }
+
       const user: AppUser = {
         id: authData.user.id,
         name: `${profile.first_name} ${profile.last_name}`,
-        role: mapLegacyRole(profile.role),
+        role: roleData.role as UserRole,
         apprenticeship: profile.apprenticeship || '',
         email: authData.user.email || '',
       };
@@ -283,11 +299,17 @@ export default function Login({ onLogin, onBack, onNavigate, language }: LoginPr
           .eq('user_id', authData.user.id)
           .single();
 
-        if (profile) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (profile && roleData) {
           const user: AppUser = {
             id: authData.user.id,
             name: `${profile.first_name} ${profile.last_name}`,
-            role: mapLegacyRole(profile.role),
+            role: roleData.role as UserRole,
             apprenticeship: profile.apprenticeship || '',
             email: authData.user.email || '',
           };

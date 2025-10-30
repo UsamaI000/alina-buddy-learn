@@ -135,7 +135,6 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
-          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           user_id: string
         }
@@ -146,7 +145,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id: string
         }
@@ -157,7 +155,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id?: string
         }
@@ -234,7 +231,7 @@ export type Database = {
     }
     Functions: {
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       has_role: {

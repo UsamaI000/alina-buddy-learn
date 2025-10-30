@@ -67,11 +67,20 @@ export default function AnalyticsDashboard({ user, language, onBack }: Analytics
     try {
       setLoading(true);
 
-      // Fetch students
+      // Fetch students - get all profiles first, then filter by role from user_roles
+      const { data: studentRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'AUSZUBILDENDE_R');
+
+      if (rolesError) throw rolesError;
+
+      const studentUserIds = studentRoles?.map(r => r.user_id) || [];
+
       const { data: students, error: studentsError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, user_id')
-        .eq('role', 'AUSZUBILDENDE_R');
+        .in('user_id', studentUserIds);
 
       if (studentsError) throw studentsError;
 

@@ -9,13 +9,13 @@ export async function getCurrentUserRole(): Promise<UserRole | null> {
   
   if (!session?.user) return null;
 
-  const { data: profile } = await supabase
-    .from('profiles')
+  const { data: roleData } = await supabase
+    .from('user_roles')
     .select('role')
     .eq('user_id', session.user.id)
     .single();
 
-  return profile?.role || null;
+  return roleData?.role || null;
 }
 
 /**
@@ -65,17 +65,27 @@ export async function validateUserRole(requiredRoles: UserRole[]): Promise<{
       return { isValid: false, user: null, error: 'Not authenticated' };
     }
 
-    const { data: profile, error } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', session.user.id)
       .single();
 
-    if (error || !profile) {
+    if (profileError || !profile) {
       return { isValid: false, user: null, error: 'Profile not found' };
     }
 
-    const userRole = profile.role as UserRole;
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (roleError || !roleData) {
+      return { isValid: false, user: null, error: 'Role not found' };
+    }
+
+    const userRole = roleData.role as UserRole;
     
     if (!hasRole(userRole, requiredRoles)) {
       return { 
