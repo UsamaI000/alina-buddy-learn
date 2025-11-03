@@ -1,10 +1,8 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { 
-  MessageSquare, 
-  BarChart3, 
-  Settings, 
   Menu, 
   Globe,
   LogOut,
@@ -19,12 +17,10 @@ import {
 
 import type { AppUser } from "@/types/auth";
 import { NAV_CONFIG } from "@/types/auth";
-import { RequireRole } from "@/components/RequireRole";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationProps {
   currentUser?: AppUser;
-  currentPage: string;
-  onNavigate: (page: string) => void;
   onLanguageChange: (lang: string) => void;
   currentLanguage: string;
 }
@@ -38,24 +34,24 @@ const languages = [
 
 export default function Navigation({ 
   currentUser, 
-  currentPage, 
-  onNavigate, 
   onLanguageChange,
   currentLanguage 
 }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const getNavItems = () => {
     if (!currentUser) return [];
     
     return NAV_CONFIG.filter(item => 
       item.allowedRoles.includes(currentUser.role)
-    ).map(item => ({
-      id: item.id,
-      label: item.label,
-      icon: item.id === 'chat' ? MessageSquare : 
-            item.id.includes('ausbilder') ? Settings : BarChart3
-    }));
+    );
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/', { replace: true });
   };
 
   const NavItems = ({ mobile = false }) => (
@@ -63,9 +59,9 @@ export default function Navigation({
       {getNavItems().map((item) => (
         <Button
           key={item.id}
-          variant={currentPage === item.id ? "default" : "ghost"}
+          variant={location.pathname === item.path ? "default" : "ghost"}
           onClick={() => {
-            onNavigate(item.id);
+            navigate(item.path);
             if (mobile) setIsOpen(false);
           }}
           className={mobile ? "w-full justify-start" : ""}
@@ -84,7 +80,7 @@ export default function Navigation({
           <div className="flex items-center">
             <Button
               variant="ghost"
-              onClick={() => onNavigate("home")}
+              onClick={() => navigate("/")}
               className="text-xl font-bold text-primary hover:bg-transparent"
             >
               ALINA
@@ -129,18 +125,18 @@ export default function Navigation({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => onNavigate("profile")}>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="h-4 w-4 mr-2" />
                     Profil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onNavigate("login")}>
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Abmelden
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => onNavigate("login")}>
+              <Button onClick={() => navigate("/login")}>
                 Anmelden
               </Button>
             )}

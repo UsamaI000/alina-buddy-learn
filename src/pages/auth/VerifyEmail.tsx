@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -7,12 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface VerifyEmailProps {
-  onBack: () => void;
   userEmail?: string;
   language: string;
 }
 
-export default function VerifyEmail({ onBack, userEmail, language }: VerifyEmailProps) {
+export default function VerifyEmail({ userEmail, language }: VerifyEmailProps) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<'pending' | 'verified' | 'error'>('pending');
   const { toast } = useToast();
@@ -107,7 +108,7 @@ export default function VerifyEmail({ onBack, userEmail, language }: VerifyEmail
               <AlertDescription>{t.verifiedDescription}</AlertDescription>
             </Alert>
             <Button 
-              onClick={onBack}
+              onClick={() => navigate("/login")}
               className="w-full mt-4"
             >
               {t.backToLogin}
@@ -138,7 +139,7 @@ export default function VerifyEmail({ onBack, userEmail, language }: VerifyEmail
                 </Button>
               )}
               <Button 
-                onClick={onBack}
+                onClick={() => navigate("/login")}
                 className="w-full"
               >
                 {t.backToLogin}
@@ -177,7 +178,7 @@ export default function VerifyEmail({ onBack, userEmail, language }: VerifyEmail
                 </Button>
               )}
               <Button 
-                onClick={onBack}
+                onClick={() => navigate("/login")}
                 variant="ghost"
                 className="w-full"
               >
@@ -194,7 +195,7 @@ export default function VerifyEmail({ onBack, userEmail, language }: VerifyEmail
       <div className="w-full max-w-md">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate("/login")}
           className="mb-6 text-primary-foreground hover:bg-white/10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

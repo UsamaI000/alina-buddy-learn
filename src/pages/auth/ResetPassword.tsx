@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +12,11 @@ import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthInd
 import { validatePassword } from "@/utils/passwordValidation";
 
 interface ResetPasswordProps {
-  onBack: () => void;
   language: string;
 }
 
-export default function ResetPassword({ onBack, language }: ResetPasswordProps) {
+export default function ResetPassword({ language }: ResetPasswordProps) {
+  const navigate = useNavigate();
   const [step, setStep] = useState<'request' | 'reset'>('request');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -144,7 +145,7 @@ export default function ResetPassword({ onBack, language }: ResetPasswordProps) 
         description: t.resetSuccess,
       });
       
-      onBack();
+      navigate("/login");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -161,7 +162,7 @@ export default function ResetPassword({ onBack, language }: ResetPasswordProps) 
       <div className="w-full max-w-md">
         <Button
           variant="ghost"
-          onClick={onBack}
+          onClick={() => navigate("/login")}
           className="mb-6 text-primary-foreground hover:bg-white/10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

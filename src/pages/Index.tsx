@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +18,12 @@ import {
 import heroImage from "@/assets/hero-image.jpg";
 
 interface IndexProps {
-  onNavigate: (page: string) => void;
   onLanguageChange: (lang: string) => void;
   currentLanguage: string;
 }
 
-export default function Index({ onNavigate, onLanguageChange, currentLanguage }: IndexProps) {
+export default function Index({ onLanguageChange, currentLanguage }: IndexProps) {
+  const navigate = useNavigate();
   const getTexts = (lang: string) => {
     const texts = {
       de: {
@@ -238,7 +239,7 @@ export default function Index({ onNavigate, onLanguageChange, currentLanguage }:
                 <Button
                   variant="secondary"
                   size="lg"
-                  onClick={() => onNavigate("login")}
+                  onClick={() => navigate("/login")}
                   className="text-lg px-8 py-4 shadow-large hover:shadow-glow transition-bounce"
                 >
                   {t.hero.cta}
@@ -381,7 +382,7 @@ export default function Index({ onNavigate, onLanguageChange, currentLanguage }:
             <Button
               variant="secondary"
               size="lg"
-              onClick={() => onNavigate("login")}
+              onClick={() => navigate("/login")}
               className="text-lg px-12 py-4 shadow-large hover:shadow-glow transition-bounce"
             >
               {t.cta.button}

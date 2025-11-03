@@ -3,34 +3,33 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navigation from "./components/Navigation";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import ChatInterface from "./components/ChatInterface";
-import Dashboard from "./components/Dashboard";
 import NotFound from "./pages/NotFound";
 import AzubiHome from "./pages/azubi/AzubiHome";
 import LearningModules from "./pages/azubi/LearningModules";
 import Calendar_Page from "./pages/azubi/Calendar";
 import AusbilderDashboard from "./pages/ausbilder/AusbilderDashboard";
-import { RouteGuard } from "./components/RouteGuard";
-import { ProfileCompletionBanner } from "./components/auth/ProfileCompletionBanner";
+import { AppLayout } from "./components/layout/AppLayout";
+import { ProtectedRoute } from "./components/routing/ProtectedRoute";
 import { WelcomeTour } from "./components/auth/WelcomeTour";
 import { useAuthSession } from "./hooks/useAuthSession";
-import type { AppUser, UserRole } from "@/types/auth";
+import type { AppUser } from "@/types/auth";
 import { getRoleBasedRedirect } from "@/utils/auth";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function AppContent() {
   const { user: currentUser, session, loading, signOut } = useAuthSession();
-  const [currentPage, setCurrentPage] = useState("home");
   const [currentLanguage, setCurrentLanguage] = useState("de");
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (currentUser && !loading) {
@@ -41,30 +40,22 @@ const App = () => {
       }
 
       // Auto-redirect to role-specific dashboard if on home page
-      if (currentPage === "home") {
+      if (location.pathname === '/') {
         const redirectPath = getRoleBasedRedirect(currentUser.role);
-        setCurrentPage(redirectPath === '/azubi/home' ? 'azubi-home' : 'ausbilder-dashboard');
+        navigate(redirectPath, { replace: true });
       }
     }
-  }, [currentUser, loading, currentPage]);
+  }, [currentUser, loading, location.pathname, navigate]);
 
   const handleLogin = (user: AppUser) => {
     // Login is now handled by useAuthSession hook
     const redirectPath = getRoleBasedRedirect(user.role);
-    setCurrentPage(redirectPath === '/azubi/home' ? 'azubi-home' : 'ausbilder-dashboard');
+    navigate(redirectPath, { replace: true });
   };
 
   const handleLogout = async () => {
     await signOut();
-    setCurrentPage("home");
-  };
-
-  const handleNavigate = (page: string) => {
-    if (page === "login" && currentUser) {
-      handleLogout();
-      return;
-    }
-    setCurrentPage(page);
+    navigate('/', { replace: true });
   };
 
   if (loading) {
@@ -78,261 +69,70 @@ const App = () => {
     );
   }
 
-  const renderPage = () => {
-    // Show profile completion banner for authenticated pages
-    const showProfileBanner = currentUser && !['login', 'reset-password', 'verify-email', 'home', 'profile'].includes(currentPage);
+  const showProfileBanner = currentUser && !['/login', '/reset-password', '/verify-email', '/', '/profile'].includes(location.pathname);
 
-    switch (currentPage) {
-      case "login":
-        return (
-          <Login
-            onLogin={handleLogin}
-            onBack={() => setCurrentPage("home")}
-            onNavigate={handleNavigate}
-            language={currentLanguage}
-          />
-        );
-      case "reset-password":
-        return (
-          <ResetPassword 
-            onBack={() => setCurrentPage("login")} 
-            language={currentLanguage} 
-          />
-        );
-      case "verify-email":
-        return (
-          <VerifyEmail 
-            onBack={() => setCurrentPage("login")} 
-            language={currentLanguage} 
-          />
-        );
-      case "profile":
-        return currentUser ? (
-          <div>
-            <Navigation
-              currentUser={currentUser}
-              currentPage={currentPage}
-              onNavigate={handleNavigate}
-              onLanguageChange={setCurrentLanguage}
-              currentLanguage={currentLanguage}
-            />
-            <Profile user={currentUser} language={currentLanguage} />
-          </div>
-        ) : (
-          <Login
-            onLogin={handleLogin}
-            onBack={() => setCurrentPage("home")}
-            onNavigate={handleNavigate}
-            language={currentLanguage}
-          />
-        );
-      case "chat":
-        return currentUser ? (
-          <div className="h-screen flex flex-col">
-            <Navigation
-              currentUser={currentUser}
-              currentPage={currentPage}
-              onNavigate={handleNavigate}
-              onLanguageChange={setCurrentLanguage}
-              currentLanguage={currentLanguage}
-            />
-            {showProfileBanner && (
-              <div className="container mx-auto px-4 pt-4">
-                <ProfileCompletionBanner
-                  user={currentUser}
-                  onNavigateToProfile={() => setCurrentPage("profile")}
-                  language={currentLanguage}
-                />
-              </div>
-            )}
-            <div className="flex-1">
-              <ChatInterface language={currentLanguage} />
-            </div>
-          </div>
-        ) : (
-          <Login
-            onLogin={handleLogin}
-            onBack={() => setCurrentPage("home")}
-            onNavigate={handleNavigate}
-            language={currentLanguage}
-          />
-        );
-      case "dashboard":
-        return currentUser ? (
-          <div>
-            <Navigation
-              currentUser={currentUser}
-              currentPage={currentPage}
-              onNavigate={handleNavigate}
-              onLanguageChange={setCurrentLanguage}
-              currentLanguage={currentLanguage}
-            />
-            {showProfileBanner && (
-              <div className="container mx-auto px-4 pt-4">
-                <ProfileCompletionBanner
-                  user={currentUser}
-                  onNavigateToProfile={() => setCurrentPage("profile")}
-                  language={currentLanguage}
-                />
-              </div>
-            )}
-            <Dashboard user={currentUser} language={currentLanguage} />
-          </div>
-        ) : (
-          <Login
-            onLogin={handleLogin}
-            onBack={() => setCurrentPage("home")}
-            onNavigate={handleNavigate}
-            language={currentLanguage}
-          />
-        );
-      case "azubi-home":
-        return (
-          <RouteGuard requiredRoles={['AUSZUBILDENDE_R']}>
-            <div>
-              <Navigation
-                currentUser={currentUser}
-                currentPage={currentPage}
-                onNavigate={handleNavigate}
-                onLanguageChange={setCurrentLanguage}
-                currentLanguage={currentLanguage}
-              />
-              {showProfileBanner && (
-                <div className="container mx-auto px-4 pt-4">
-                  <ProfileCompletionBanner
-                    user={currentUser!}
-                    onNavigateToProfile={() => setCurrentPage("profile")}
-                    language={currentLanguage}
-                  />
-                </div>
-              )}
-              <AzubiHome user={currentUser!} language={currentLanguage} />
-            </div>
-          </RouteGuard>
-        );
-      case "azubi-learning-modules":
-        return (
-          <RouteGuard requiredRoles={['AUSZUBILDENDE_R']}>
-            <div>
-              <Navigation
-                currentUser={currentUser}
-                currentPage={currentPage}
-                onNavigate={handleNavigate}
-                onLanguageChange={setCurrentLanguage}
-                currentLanguage={currentLanguage}
-              />
-              {showProfileBanner && (
-                <div className="container mx-auto px-4 pt-4">
-                  <ProfileCompletionBanner
-                    user={currentUser!}
-                    onNavigateToProfile={() => setCurrentPage("profile")}
-                    language={currentLanguage}
-                  />
-                </div>
-              )}
-              <LearningModules user={currentUser!} language={currentLanguage} />
-            </div>
-          </RouteGuard>
-        );
-      case "azubi-calendar":
-        return (
-          <RouteGuard requiredRoles={['AUSZUBILDENDE_R']}>
-            <div>
-              <Navigation
-                currentUser={currentUser}
-                currentPage={currentPage}
-                onNavigate={handleNavigate}
-                onLanguageChange={setCurrentLanguage}
-                currentLanguage={currentLanguage}
-              />
-              {showProfileBanner && (
-                <div className="container mx-auto px-4 pt-4">
-                  <ProfileCompletionBanner
-                    user={currentUser!}
-                    onNavigateToProfile={() => setCurrentPage("profile")}
-                    language={currentLanguage}
-                  />
-                </div>
-              )}
-              <Calendar_Page user={currentUser!} language={currentLanguage} />
-            </div>
-          </RouteGuard>
-        );
-      case "ausbilder-dashboard":
-        return (
-          <RouteGuard requiredRoles={['AUSBILDER_IN']}>
-            <div>
-              <Navigation
-                currentUser={currentUser}
-                currentPage={currentPage}
-                onNavigate={handleNavigate}
-                onLanguageChange={setCurrentLanguage}
-                currentLanguage={currentLanguage}
-              />
-              {showProfileBanner && (
-                <div className="container mx-auto px-4 pt-4">
-                  <ProfileCompletionBanner
-                    user={currentUser!}
-                    onNavigateToProfile={() => setCurrentPage("profile")}
-                    language={currentLanguage}
-                  />
-                </div>
-              )}
-              <AusbilderDashboard user={currentUser!} language={currentLanguage} />
-            </div>
-          </RouteGuard>
-        );
-      case "instructor":
-        // Legacy route - redirect to new route
-        return currentUser?.role === "AUSBILDER_IN" ? (
-          <div>
-            <Navigation
-              currentUser={currentUser}
-              currentPage={currentPage}
-              onNavigate={handleNavigate}
-              onLanguageChange={setCurrentLanguage}
-              currentLanguage={currentLanguage}
-            />
-            <AusbilderDashboard user={currentUser} language={currentLanguage} />
-          </div>
-        ) : (
-          <Login
-            onLogin={handleLogin}
-            onBack={() => setCurrentPage("home")}
-            onNavigate={handleNavigate}
-            language={currentLanguage}
-          />
-        );
-      case "home":
-      default:
-        return (
-          <Index
-            onNavigate={handleNavigate}
-            onLanguageChange={setCurrentLanguage}
-            currentLanguage={currentLanguage}
-          />
-        );
-    }
-  };
+  return (
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Index onLanguageChange={setCurrentLanguage} currentLanguage={currentLanguage} />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} language={currentLanguage} />} />
+        <Route path="/reset-password" element={<ResetPassword language={currentLanguage} />} />
+        <Route path="/verify-email" element={<VerifyEmail language={currentLanguage} />} />
 
+        {/* Protected Routes with Layout */}
+        {currentUser && (
+          <Route element={<AppLayout currentUser={currentUser} currentLanguage={currentLanguage} onLanguageChange={setCurrentLanguage} showProfileBanner={!!showProfileBanner} />}>
+            {/* Common authenticated routes */}
+            <Route path="/profile" element={<Profile user={currentUser} language={currentLanguage} />} />
+            <Route path="/chat" element={<div className="h-[calc(100vh-4rem)]"><ChatInterface language={currentLanguage} /></div>} />
+
+            {/* Azubi Routes */}
+            <Route element={<ProtectedRoute requiredRoles={['AUSZUBILDENDE_R']} isAuthenticated={!!currentUser} />}>
+              <Route path="/azubi/home" element={<AzubiHome user={currentUser} language={currentLanguage} />} />
+              <Route path="/azubi/learning-modules" element={<LearningModules user={currentUser} language={currentLanguage} />} />
+              <Route path="/azubi/calendar" element={<Calendar_Page user={currentUser} language={currentLanguage} />} />
+            </Route>
+
+            {/* Ausbilder Routes */}
+            <Route element={<ProtectedRoute requiredRoles={['AUSBILDER_IN']} isAuthenticated={!!currentUser} />}>
+              <Route path="/ausbilder/dashboard" element={<AusbilderDashboard user={currentUser} language={currentLanguage} />} />
+            </Route>
+          </Route>
+        )}
+
+        {/* Fallback for protected routes when not authenticated */}
+        {!currentUser && (
+          <>
+            <Route path="/profile" element={<Navigate to="/login" replace />} />
+            <Route path="/chat" element={<Navigate to="/login" replace />} />
+            <Route path="/azubi/*" element={<Navigate to="/login" replace />} />
+            <Route path="/ausbilder/*" element={<Navigate to="/login" replace />} />
+          </>
+        )}
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+
+      {showWelcomeTour && currentUser && (
+        <WelcomeTour
+          user={currentUser}
+          language={currentLanguage}
+          onComplete={() => setShowWelcomeTour(false)}
+        />
+      )}
+    </>
+  );
+}
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={renderPage()} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          
-          {showWelcomeTour && currentUser && (
-            <WelcomeTour
-              user={currentUser}
-              language={currentLanguage}
-              onComplete={() => setShowWelcomeTour(false)}
-            />
-          )}
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

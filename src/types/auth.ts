@@ -1,3 +1,5 @@
+import { LucideIcon, Home, BookOpen, Calendar, LayoutDashboard, MessageSquare } from 'lucide-react';
+
 // Authentication and role types
 export type UserRole = 'AUSZUBILDENDE_R' | 'AUSBILDER_IN';
 
@@ -39,30 +41,35 @@ export const NAV_CONFIG = [
   {
     id: 'azubi-home',
     label: 'Mein Bereich',
+    icon: Home,
     allowedRoles: ['AUSZUBILDENDE_R'] as UserRole[],
     path: '/azubi/home'
   },
   {
     id: 'azubi-learning-modules',
     label: 'Lernmodule',
+    icon: BookOpen,
     allowedRoles: ['AUSZUBILDENDE_R'] as UserRole[],
     path: '/azubi/learning-modules'
   },
   {
     id: 'azubi-calendar',
     label: 'Kalender',
+    icon: Calendar,
     allowedRoles: ['AUSZUBILDENDE_R'] as UserRole[],
     path: '/azubi/calendar'
   },
   {
     id: 'ausbilder-dashboard',
     label: 'Ausbilder Dashboard',
+    icon: LayoutDashboard,
     allowedRoles: ['AUSBILDER_IN'] as UserRole[],
     path: '/ausbilder/dashboard'
   },
   {
     id: 'chat',
     label: 'ALINA Chat',
+    icon: MessageSquare,
     allowedRoles: ['AUSZUBILDENDE_R', 'AUSBILDER_IN'] as UserRole[],
     path: '/chat'
   }

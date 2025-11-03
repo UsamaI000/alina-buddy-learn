@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,12 +17,11 @@ import { validatePassword } from "@/utils/passwordValidation";
 
 interface LoginProps {
   onLogin: (user: AppUser) => void;
-  onBack: () => void;
-  onNavigate: (page: string) => void;
   language: string;
 }
 
-export default function Login({ onLogin, onBack, onNavigate, language }: LoginProps) {
+export default function Login({ onLogin, language }: LoginProps) {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -144,7 +144,7 @@ export default function Login({ onLogin, onBack, onNavigate, language }: LoginPr
             title: "E-Mail nicht bestätigt",
             description: "Bitte bestätigen Sie Ihre E-Mail-Adresse über den Link in Ihrer E-Mail.",
           });
-          onNavigate("verify-email");
+          navigate("/verify-email");
           return;
         } else {
           toast({
@@ -287,7 +287,7 @@ export default function Login({ onLogin, onBack, onNavigate, language }: LoginPr
           title: "Registrierung erfolgreich!",
           description: "Bitte bestätigen Sie Ihre E-Mail-Adresse über den Link in Ihrer E-Mail.",
         });
-        onNavigate("verify-email");
+        navigate("/verify-email");
         return;
       }
 
@@ -331,7 +331,7 @@ export default function Login({ onLogin, onBack, onNavigate, language }: LoginPr
         {/* Back Button */}
         <Button 
           variant="ghost" 
-          onClick={onBack}
+          onClick={() => navigate("/")}
           className="text-primary-foreground hover:bg-white/10 mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -412,7 +412,7 @@ export default function Login({ onLogin, onBack, onNavigate, language }: LoginPr
                         type="button"
                         variant="link"
                         className="text-sm text-primary hover:underline p-0 h-auto"
-                        onClick={() => onNavigate("reset-password")}
+                        onClick={() => navigate("/reset-password")}
                       >
                         {t.login.forgotPassword}
                       </Button>
