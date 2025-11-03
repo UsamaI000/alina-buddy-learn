@@ -45,8 +45,10 @@ const eventTypeLabels = {
 };
 
 export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, title = 'Event erstellen' }: EventFormDialogProps) {
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
+  const initialStartTime = defaultValues?.start_time ? format(defaultValues.start_time, 'HH:mm') : '09:00';
+  const initialEndTime = defaultValues?.end_time ? format(defaultValues.end_time, 'HH:mm') : '10:00';
+  const [startTime, setStartTime] = useState(initialStartTime);
+  const [endTime, setEndTime] = useState(initialEndTime);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<EventFormData>({
@@ -129,12 +131,20 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
                   <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setValue('start_time', date);
-                        setValue('end_time', date);
-                      }
-                    }}
+                      onSelect={(date) => {
+                        if (date) {
+                          const start = new Date(date);
+                          const [sh, sm] = startTime.split(':').map(Number);
+                          start.setHours(sh, sm, 0, 0);
+
+                          const end = new Date(date);
+                          const [eh, em] = endTime.split(':').map(Number);
+                          end.setHours(eh, em, 0, 0);
+
+                          setValue('start_time', start);
+                          setValue('end_time', end);
+                        }
+                      }}
                     initialFocus
                     className="pointer-events-auto"
                   />
