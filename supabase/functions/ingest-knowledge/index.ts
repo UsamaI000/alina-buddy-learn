@@ -74,16 +74,6 @@ serve(async (req) => {
 
     console.log('Processing knowledge ingestion for user:', user.id);
 
-    // Verify user is AUSBILDER_IN
-    const { data: roleData } = await supabaseClient.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'AUSBILDER_IN'
-    });
-
-    if (!roleData) {
-      throw new Error('Unauthorized: Instructor role required');
-    }
-
     // Parse request
     const { learning_module_id, title, content, metadata = {} } = await req.json();
 
