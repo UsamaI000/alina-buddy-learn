@@ -68,21 +68,7 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
   const handleFormSubmit = async (data: EventFormData) => {
     setIsSubmitting(true);
     try {
-      // Combine date with time
-      const start = new Date(data.start_time);
-      const [startHour, startMinute] = startTime.split(':').map(Number);
-      start.setHours(startHour, startMinute, 0, 0);
-
-      const end = new Date(data.end_time);
-      const [endHour, endMinute] = endTime.split(':').map(Number);
-      end.setHours(endHour, endMinute, 0, 0);
-
-      await onSubmit({
-        ...data,
-        start_time: start,
-        end_time: end,
-      });
-      
+      await onSubmit(data);
       reset();
       onOpenChange(false);
     } catch (error) {
@@ -165,7 +151,16 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
                 id="startTime"
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                  const currentDate = watch('start_time');
+                  if (currentDate) {
+                    const newStart = new Date(currentDate);
+                    const [hours, minutes] = e.target.value.split(':').map(Number);
+                    newStart.setHours(hours, minutes, 0, 0);
+                    setValue('start_time', newStart);
+                  }
+                }}
               />
             </div>
             <div>
@@ -174,7 +169,16 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
                 id="endTime"
                 type="time"
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
+                onChange={(e) => {
+                  setEndTime(e.target.value);
+                  const currentDate = watch('end_time');
+                  if (currentDate) {
+                    const newEnd = new Date(currentDate);
+                    const [hours, minutes] = e.target.value.split(':').map(Number);
+                    newEnd.setHours(hours, minutes, 0, 0);
+                    setValue('end_time', newEnd);
+                  }
+                }}
               />
             </div>
           </div>
