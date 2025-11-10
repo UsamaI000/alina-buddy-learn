@@ -16,11 +16,10 @@ import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthInd
 import { validatePassword } from "@/utils/passwordValidation";
 
 interface LoginProps {
-  onLogin: (user: AppUser) => void;
   language: string;
 }
 
-export default function Login({ onLogin, language }: LoginProps) {
+export default function Login({ language }: LoginProps) {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -190,15 +189,10 @@ export default function Login({ onLogin, language }: LoginProps) {
         return;
       }
 
-      const user: AppUser = {
-        id: authData.user.id,
-        name: `${profile.first_name} ${profile.last_name}`,
-        role: roleData.role as UserRole,
-        apprenticeship: profile.apprenticeship || '',
-        email: authData.user.email || '',
-      };
-
-      onLogin(user);
+      toast({
+        title: "Anmeldung erfolgreich!",
+        description: "Willkommen zurück!",
+      });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -306,14 +300,10 @@ export default function Login({ onLogin, language }: LoginProps) {
           .single();
 
         if (profile && roleData) {
-          const user: AppUser = {
-            id: authData.user.id,
-            name: `${profile.first_name} ${profile.last_name}`,
-            role: roleData.role as UserRole,
-            apprenticeship: profile.apprenticeship || '',
-            email: authData.user.email || '',
-          };
-          onLogin(user);
+          toast({
+            title: "Registrierung erfolgreich!",
+            description: "Du wirst weitergeleitet...",
+          });
         }
       }
     } catch (error: any) {

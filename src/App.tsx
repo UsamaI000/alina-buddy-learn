@@ -39,19 +39,14 @@ function AppContent() {
         setShowWelcomeTour(true);
       }
 
-      // Auto-redirect to role-specific dashboard if on home page
-      if (location.pathname === '/') {
+      // Auto-redirect from public pages to role-specific dashboard
+      const publicPaths = ['/', '/login', '/reset-password', '/verify-email'];
+      if (publicPaths.includes(location.pathname)) {
         const redirectPath = getRoleBasedRedirect(currentUser.role);
         navigate(redirectPath, { replace: true });
       }
     }
   }, [currentUser, loading, location.pathname, navigate]);
-
-  const handleLogin = (user: AppUser) => {
-    // Login is now handled by useAuthSession hook
-    const redirectPath = getRoleBasedRedirect(user.role);
-    navigate(redirectPath, { replace: true });
-  };
 
   const handleLogout = async () => {
     await signOut();
@@ -76,7 +71,7 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Index onLanguageChange={setCurrentLanguage} currentLanguage={currentLanguage} />} />
-        <Route path="/login" element={<Login onLogin={handleLogin} language={currentLanguage} />} />
+        <Route path="/login" element={<Login language={currentLanguage} />} />
         <Route path="/reset-password" element={<ResetPassword language={currentLanguage} />} />
         <Route path="/verify-email" element={<VerifyEmail language={currentLanguage} />} />
 
