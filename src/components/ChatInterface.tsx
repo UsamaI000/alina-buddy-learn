@@ -8,6 +8,7 @@ import { Send, Paperclip, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import alinaAvatar from "@/assets/alina-avatar.jpg";
+import { getTranslation, type Language } from "@/utils/i18n";
 
 interface Message {
   id: string;
@@ -22,10 +23,12 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({ language }: ChatInterfaceProps) {
+  const t = getTranslation('chat', language as Language);
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: getWelcomeMessage(language),
+      content: t.welcomeMessage,
       sender: "alina",
       timestamp: new Date(),
       type: "text"
@@ -45,16 +48,6 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  function getWelcomeMessage(lang: string): string {
-    const messages = {
-      de: "Hallo! Ich bin ALINA, dein digitaler Ausbildungs-Buddy. Ich helfe dir bei deiner Ausbildung zum Kfz-Mechatroniker. Wie kann ich dir heute helfen?",
-      en: "Hello! I'm ALINA, your digital training buddy. I help you with your automotive technician training. How can I help you today?",
-      ar: "مرحبا! أنا ALINA، مساعد التدريب الرقمي الخاص بك. أساعدك في تدريبك لتصبح فني سيارات. كيف يمكنني مساعدتك اليوم؟",
-      uk: "Привіт! Я ALINA, твій цифровий помічник у навчанні. Я допомагаю тобі у підготовці до професії автомеханіка. Як я можу допомогти тобі сьогодні?"
-    };
-    return messages[lang as keyof typeof messages] || messages.de;
-  }
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isStreaming) return;
@@ -102,13 +95,13 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
         if (response.status === 429) {
           toast({
             title: "Rate Limit",
-            description: "Too many requests. Please wait a moment.",
+            description: t.rateLimitError,
             variant: "destructive",
           });
         } else if (response.status === 402) {
           toast({
             title: "Service Unavailable",
-            description: "AI service requires payment. Contact support.",
+            description: t.serviceError,
             variant: "destructive",
           });
         } else {
@@ -188,7 +181,7 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
       console.error('Chat error:', error);
       toast({
         title: "Error",
-        description: "Failed to get response from ALINA. Please try again.",
+        description: t.generalError,
         variant: "destructive",
       });
       setIsStreaming(false);
@@ -218,11 +211,11 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
           <div>
             <h2 className="font-semibold text-foreground">ALINA</h2>
             <p className="text-sm text-muted-foreground">
-              Dein digitaler Ausbildungs-Buddy
+              {t.subtitle}
             </p>
           </div>
           <Badge variant="secondary" className="ml-auto">
-            {isStreaming ? "Denkt nach..." : "Online"}
+            {isStreaming ? t.thinking : t.online}
           </Badge>
         </div>
       </div>
@@ -285,7 +278,7 @@ export default function ChatInterface({ language }: ChatInterfaceProps) {
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Schreibe deine Nachricht..."
+              placeholder={t.placeholder}
               onKeyPress={(e) => e.key === "Enter" && !isStreaming && handleSendMessage()}
               disabled={isStreaming}
               className="pr-12"

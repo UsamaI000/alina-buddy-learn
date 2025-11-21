@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { validatePassword } from '@/utils/passwordValidation';
 import type { AppUser } from '@/types/auth';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface ProfileProps {
   user: AppUser;
@@ -42,39 +43,8 @@ export default function Profile({ user, language }: ProfileProps) {
   const [newEmail, setNewEmail] = useState('');
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const { toast } = useToast();
-
-  const t = {
-    de: {
-      profile: 'Profil',
-      security: 'Sicherheit',
-      sessions: 'Sitzungen',
-      personalInfo: 'Persönliche Informationen',
-      firstName: 'Vorname',
-      lastName: 'Nachname',
-      apprenticeship: 'Ausbildung',
-      company: 'Unternehmen',
-      email: 'E-Mail',
-      role: 'Rolle',
-      updateProfile: 'Profil aktualisieren',
-      changePassword: 'Passwort ändern',
-      currentPassword: 'Aktuelles Passwort',
-      newPassword: 'Neues Passwort',
-      confirmPassword: 'Passwort bestätigen',
-      changeEmail: 'E-Mail ändern',
-      newEmail: 'Neue E-Mail',
-      updateEmail: 'E-Mail aktualisieren',
-      activeSessions: 'Aktive Sitzungen',
-      terminateSession: 'Sitzung beenden',
-      terminateAll: 'Alle Sitzungen beenden',
-      profileUpdated: 'Profil erfolgreich aktualisiert',
-      passwordChanged: 'Passwort erfolgreich geändert',
-      emailChanged: 'E-Mail erfolgreich geändert',
-      passwordsNoMatch: 'Passwörter stimmen nicht überein',
-      weakPassword: 'Passwort ist zu schwach'
-    }
-  };
-
-  const texts = t[language as keyof typeof t] || t.de;
+  
+  const texts = getTranslation('profile', language as Language);
 
   useEffect(() => {
     loadProfile();
@@ -129,12 +99,12 @@ export default function Profile({ user, language }: ProfileProps) {
 
       toast({
         title: texts.profileUpdated,
-        description: "Ihre Profildaten wurden erfolgreich aktualisiert."
+        description: texts.profileUpdateSuccess
       });
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Profil konnte nicht aktualisiert werden.",
+        description: texts.profileUpdateError,
         variant: "destructive"
       });
     } finally {
@@ -175,12 +145,12 @@ export default function Profile({ user, language }: ProfileProps) {
       setPasswords({ current: '', new: '', confirm: '' });
       toast({
         title: texts.passwordChanged,
-        description: "Ihr Passwort wurde erfolgreich geändert."
+        description: texts.passwordChangeSuccess
       });
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Passwort konnte nicht geändert werden.",
+        description: texts.passwordChangeError,
         variant: "destructive"
       });
     } finally {
@@ -201,13 +171,13 @@ export default function Profile({ user, language }: ProfileProps) {
 
       toast({
         title: texts.emailChanged,
-        description: "Bestätigungslink wurde an die neue E-Mail-Adresse gesendet."
+        description: texts.emailChangeSuccess
       });
       setNewEmail('');
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "E-Mail konnte nicht geändert werden.",
+        description: texts.emailChangeError,
         variant: "destructive"
       });
     } finally {
@@ -220,10 +190,10 @@ export default function Profile({ user, language }: ProfileProps) {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            {texts.profile}
+            {texts.title}
           </h1>
           <p className="text-muted-foreground">
-            Verwalten Sie Ihre Kontoinformationen und Sicherheitseinstellungen
+            {texts.subtitle}
           </p>
         </div>
 
@@ -231,7 +201,7 @@ export default function Profile({ user, language }: ProfileProps) {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              {texts.profile}
+              {texts.title}
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -296,7 +266,7 @@ export default function Profile({ user, language }: ProfileProps) {
                   </div>
 
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Aktualisierung...' : texts.updateProfile}
+                    {loading ? texts.updating : texts.updateProfile}
                   </Button>
                 </form>
               </CardContent>
@@ -347,7 +317,7 @@ export default function Profile({ user, language }: ProfileProps) {
                   </div>
 
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Änderung...' : texts.changePassword}
+                    {loading ? texts.changing : texts.changePassword}
                   </Button>
                 </form>
               </CardContent>
@@ -363,7 +333,7 @@ export default function Profile({ user, language }: ProfileProps) {
               <CardContent>
                 <form onSubmit={changeEmail} className="space-y-4">
                   <div>
-                    <Label>Aktuelle E-Mail</Label>
+                    <Label>{texts.currentEmail}</Label>
                     <Input value={user.email} disabled />
                   </div>
                   
@@ -374,19 +344,19 @@ export default function Profile({ user, language }: ProfileProps) {
                       type="email"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="neue@email.de"
+                      placeholder={texts.newEmail}
                     />
                   </div>
 
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Sie erhalten eine Bestätigungs-E-Mail an die neue Adresse.
+                      {texts.emailConfirmationNote}
                     </AlertDescription>
                   </Alert>
 
                   <Button type="submit" disabled={loading || !newEmail}>
-                    {loading ? 'Änderung...' : texts.updateEmail}
+                    {loading ? texts.changing : texts.updateEmail}
                   </Button>
                 </form>
               </CardContent>
@@ -405,13 +375,13 @@ export default function Profile({ user, language }: ProfileProps) {
                       <p className="font-medium">{session.user_agent}</p>
                       <p className="text-sm text-muted-foreground">IP: {session.ip}</p>
                       <p className="text-sm text-muted-foreground">
-                        Zuletzt aktiv: {new Date(session.last_seen).toLocaleString('de')}
+                        {texts.lastActive}: {new Date(session.last_seen).toLocaleString(language)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Aktuelle Sitzung
+                        {texts.currentSession}
                       </Badge>
                     </div>
                   </div>
