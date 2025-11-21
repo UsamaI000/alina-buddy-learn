@@ -56,6 +56,17 @@ export default function Navigation({
     navigate('/', { replace: true });
   };
 
+  const getTranslatedLabel = (itemId: string) => {
+    const labelMap: Record<string, string> = {
+      'azubi-home': t.myArea,
+      'azubi-learning-modules': t.learningModules,
+      'azubi-calendar': t.calendar,
+      'ausbilder-dashboard': t.instructorDashboard,
+      'chat': t.alinaChat,
+    };
+    return labelMap[itemId] || itemId;
+  };
+
   const NavItems = ({ mobile = false }) => (
     <>
       {getNavItems().map((item) => (
@@ -69,7 +80,7 @@ export default function Navigation({
           className={mobile ? "w-full justify-start" : ""}
         >
           <item.icon className="h-4 w-4 mr-2" />
-          {item.label}
+          {getTranslatedLabel(item.id)}
         </Button>
       ))}
     </>
