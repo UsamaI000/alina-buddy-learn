@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, parseISO, isAfter, isSameDay, startOfDay } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { de, enUS, ar, uk } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, CheckCircle2, AlertCircle, Circle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -10,6 +10,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
 import type { AppUser } from '@/types/auth';
 import type { Database } from '@/integrations/supabase/types';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -20,11 +21,21 @@ interface CalendarProps {
 }
 
 const Calendar_Page = ({ user, language }: CalendarProps) => {
+  const texts = getTranslation('azubiCalendar', language as Language);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { events, loading: eventsLoading } = useEvents();
   const { tasks, loading: tasksLoading } = useTasks();
 
   const loading = eventsLoading || tasksLoading;
+  
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'ar': return ar;
+      case 'uk': return uk;
+      default: return de;
+    }
+  };
 
   // Get dates with events
   const eventDates = events.map(e => startOfDay(parseISO(e.start_time)));
@@ -68,11 +79,11 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
   const getTaskStatusBadge = (status: string) => {
     switch (status) {
       case 'DONE':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Erledigt</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{texts.done}</Badge>;
       case 'IN_PROGRESS':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">In Bearbeitung</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{texts.inProgress}</Badge>;
       case 'OPEN':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Offen</Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{texts.open}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -89,10 +100,10 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
             <CalendarIcon className="inline-block mr-3 h-8 w-8" />
-            Kalender
+            {texts.title}
           </h1>
           <p className="text-muted-foreground">
-            Deine Termine und Aufgaben im Überblick
+            {texts.subtitle}
           </p>
         </div>
 
@@ -137,18 +148,18 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                 
                 {/* Legend */}
                 <div className="mt-6 space-y-2 border-t pt-4">
-                  <p className="text-sm font-semibold text-foreground mb-3">Legende:</p>
+                  <p className="text-sm font-semibold text-foreground mb-3">{texts.legend}</p>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="h-4 w-4 rounded bg-blue-100 dark:bg-blue-900 border" />
-                    <span className="text-muted-foreground">Termine</span>
+                    <span className="text-muted-foreground">{texts.events}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="h-4 w-4 rounded bg-green-100 dark:bg-green-900 border" />
-                    <span className="text-muted-foreground">Aufgaben</span>
+                    <span className="text-muted-foreground">{texts.tasks}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="h-4 w-4 rounded bg-red-100 dark:bg-red-900 border" />
-                    <span className="text-muted-foreground">Überfällige Aufgaben</span>
+                    <span className="text-muted-foreground">{texts.overdueTasks}</span>
                   </div>
                 </div>
               </CardContent>
@@ -159,20 +170,20 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
               <CardHeader>
                 <CardTitle>
                   {selectedDate 
-                    ? format(selectedDate, 'EEEE, dd. MMMM yyyy', { locale: de })
-                    : 'Wähle einen Tag aus'}
+                    ? format(selectedDate, 'EEEE, dd. MMMM yyyy', { locale: getDateLocale() })
+                    : texts.selectDay}
                 </CardTitle>
                 <CardDescription>
                   {dayEvents.length === 0 && dayTasks.length === 0 
-                    ? 'Keine Termine oder Aufgaben für diesen Tag'
-                    : `${dayEvents.length} Termin${dayEvents.length !== 1 ? 'e' : ''}, ${dayTasks.length} Aufgabe${dayTasks.length !== 1 ? 'n' : ''}`}
+                    ? texts.noEntries
+                    : `${dayEvents.length} ${dayEvents.length !== 1 ? texts.eventPlural : texts.eventSingular}, ${dayTasks.length} ${dayTasks.length !== 1 ? texts.taskPlural : texts.taskSingular}`}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {!selectedDate ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>Wähle einen Tag im Kalender aus, um Details zu sehen</p>
+                    <p>{texts.selectDayToView}</p>
                   </div>
                 ) : (
                   <>
@@ -181,7 +192,7 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                       <div>
                         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                           <Clock className="h-5 w-5 text-blue-500" />
-                          Termine
+                          {texts.events}
                         </h3>
                         <div className="space-y-3">
                           {dayEvents.map(event => (
@@ -200,9 +211,9 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                       <span className="flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
-                                        {format(parseISO(event.start_time), 'HH:mm', { locale: de })}
+                                        {format(parseISO(event.start_time), 'HH:mm', { locale: getDateLocale() })}
                                         {event.end_time && 
-                                          ` - ${format(parseISO(event.end_time), 'HH:mm', { locale: de })}`
+                                          ` - ${format(parseISO(event.end_time), 'HH:mm', { locale: getDateLocale() })}`
                                         }
                                       </span>
                                     </div>
@@ -220,7 +231,7 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                       <div>
                         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                           <CheckCircle2 className="h-5 w-5 text-green-500" />
-                          Aufgaben
+                          {texts.tasks}
                         </h3>
                         <div className="space-y-3">
                           {dayTasks.map(task => (
@@ -248,7 +259,7 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                                         {isOverdue(task) && (
                                           <Badge variant="destructive" className="text-xs">
                                             <AlertCircle className="h-3 w-3 mr-1" />
-                                            Überfällig
+                                            {texts.overdue}
                                           </Badge>
                                         )}
                                       </div>
@@ -274,8 +285,8 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                     {dayEvents.length === 0 && dayTasks.length === 0 && (
                       <div className="text-center py-12 text-muted-foreground">
                         <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="font-medium mb-1">Keine Einträge für diesen Tag</p>
-                        <p className="text-sm">An diesem Tag sind keine Termine oder Aufgaben geplant</p>
+                        <p className="font-medium mb-1">{texts.noEntriesTitle}</p>
+                        <p className="text-sm">{texts.noEntriesDesc}</p>
                       </div>
                     )}
                   </>
@@ -294,7 +305,7 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                   <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Termine gesamt</p>
+                  <p className="text-sm text-muted-foreground">{texts.totalEvents}</p>
                   <p className="text-2xl font-bold text-foreground">{events.length}</p>
                 </div>
               </div>
@@ -308,7 +319,7 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                   <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Erledigte Aufgaben</p>
+                  <p className="text-sm text-muted-foreground">{texts.completedTasks}</p>
                   <p className="text-2xl font-bold text-foreground">
                     {tasks.filter(t => t.status === 'DONE').length}
                   </p>
@@ -324,7 +335,7 @@ const Calendar_Page = ({ user, language }: CalendarProps) => {
                   <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Offene Aufgaben</p>
+                  <p className="text-sm text-muted-foreground">{texts.openTasks}</p>
                   <p className="text-2xl font-bold text-foreground">
                     {tasks.filter(t => t.status !== 'DONE').length}
                   </p>
