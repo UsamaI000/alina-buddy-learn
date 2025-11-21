@@ -9,6 +9,7 @@ import LearningModulesManagement from './LearningModulesManagement';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import AusbilderCalendar from './AusbilderCalendar';
 import TaskAssignment from './TaskAssignment';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface AusbilderDashboardProps {
   user: AppUser;
@@ -17,28 +18,7 @@ interface AusbilderDashboardProps {
 
 export default function AusbilderDashboard({ user, language }: AusbilderDashboardProps) {
   const [currentView, setCurrentView] = useState<'dashboard' | 'students' | 'modules' | 'analytics' | 'calendar' | 'tasks'>('dashboard');
-  const t = {
-    de: {
-      title: 'Ausbilder Dashboard',
-      subtitle: 'Verwaltung und Übersicht',
-      students: 'Auszubildende',
-      content: 'Lerninhalte',
-      analytics: 'Statistiken',
-      settings: 'Einstellungen',
-      exams: 'Prüfungen',
-      calendar: 'Kalender',
-      tasks: 'Aufgaben',
-      manageStudents: 'Auszubildende verwalten',
-      manageContent: 'Inhalte verwalten',
-      viewAnalytics: 'Statistiken ansehen',
-      openSettings: 'Einstellungen öffnen',
-      createExam: 'Prüfung erstellen',
-      viewCalendar: 'Kalender öffnen',
-      manageTasks: 'Aufgaben zuweisen'
-    }
-  };
-
-  const texts = t[language as keyof typeof t] || t.de;
+  const texts = getTranslation('ausbilderDashboard', language as Language);
 
   // Render different views based on currentView state
   if (currentView === 'students') {
@@ -69,10 +49,10 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             {texts.title}
           </h1>
           <p className="text-muted-foreground mb-4">
-            Willkommen zurück, {user.name}!
+            {texts.welcomeBack}, {user.name}!
           </p>
           <div className="flex gap-2">
-            <Badge variant="secondary">Ausbilder/in</Badge>
+            <Badge variant="secondary">{texts.roleInstructor}</Badge>
             <Badge variant="outline">{user.apprenticeship}</Badge>
           </div>
         </div>
@@ -88,7 +68,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Verwalte deine Auszubildenden und deren Fortschritt.
+                {texts.manageStudentsDesc}
               </p>
               <Button className="w-full" onClick={() => setCurrentView('students')}>
                 {texts.manageStudents}
@@ -106,7 +86,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Erstelle und bearbeite Lerninhalte und Materialien.
+                {texts.manageContentDesc}
               </p>
               <Button variant="outline" className="w-full" onClick={() => setCurrentView('modules')}>
                 {texts.manageContent}
@@ -124,7 +104,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Analysiere Lernfortschritte und Leistungen.
+                {texts.viewAnalyticsDesc}
               </p>
               <Button variant="outline" className="w-full" onClick={() => setCurrentView('analytics')}>
                 {texts.viewAnalytics}
@@ -142,7 +122,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Erstelle und verwalte Prüfungen und Tests.
+                {texts.createExamDesc}
               </p>
               <Button variant="outline" className="w-full">
                 {texts.createExam}
@@ -160,7 +140,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Plane Termine und Lehreinheiten.
+                {texts.viewCalendarDesc}
               </p>
               <Button variant="outline" className="w-full" onClick={() => setCurrentView('calendar')}>
                 {texts.viewCalendar}
@@ -178,7 +158,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Erstelle und weise Aufgaben an Auszubildende zu.
+                {texts.manageTasksDesc}
               </p>
               <Button variant="outline" className="w-full" onClick={() => setCurrentView('tasks')}>
                 {texts.manageTasks}
@@ -196,7 +176,7 @@ export default function AusbilderDashboard({ user, language }: AusbilderDashboar
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Konfiguriere deine Einstellungen und Präferenzen.
+                {texts.openSettingsDesc}
               </p>
               <Button variant="outline" className="w-full">
                 {texts.openSettings}
