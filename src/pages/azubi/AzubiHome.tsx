@@ -65,7 +65,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
           {/* Progress Overview */}
           <section>
             <h2 className="text-2xl font-semibold mb-6">{texts.progress}</h2>
-            <ProgressOverview tasks={tasks} modules={modules} />
+            <ProgressOverview tasks={tasks} modules={modules} language={language} />
           </section>
 
           {/* Learning Modules */}
@@ -108,6 +108,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
                     key={module.id}
                     module={module}
                     onStart={handleStartModule}
+                    language={language}
                   />
                 ))}
               </div>
@@ -152,6 +153,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
                       key={task.id}
                       task={task}
                       onUpdateStatus={handleTaskStatusUpdate}
+                      language={language}
                     />
                   ))}
                 </div>
@@ -160,7 +162,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
 
             {/* Events Calendar and Chat */}
             <div className="space-y-6">
-              <EventsCalendar events={events} />
+              <EventsCalendar events={events} language={language} />
               
               {/* Chat Card */}
               <Card className="hover:shadow-lg transition-shadow">

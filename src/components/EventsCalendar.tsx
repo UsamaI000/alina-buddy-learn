@@ -4,14 +4,17 @@ import { Calendar, Clock, MapPin } from 'lucide-react';
 import { format, parseISO, isToday, isTomorrow, isThisWeek } from 'date-fns';
 import { de } from 'date-fns/locale';
 import type { Database } from '@/integrations/supabase/types';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 type Event = Database['public']['Tables']['events']['Row'];
 
 interface EventsCalendarProps {
   events: Event[];
+  language?: string;
 }
 
-export function EventsCalendar({ events }: EventsCalendarProps) {
+export function EventsCalendar({ events, language = 'de' }: EventsCalendarProps) {
+  const texts = getTranslation('eventsCalendar', language as Language);
   const upcomingEvents = events
     .filter(event => new Date(event.start_time) >= new Date())
     .slice(0, 5);
@@ -20,9 +23,9 @@ export function EventsCalendar({ events }: EventsCalendarProps) {
     const date = parseISO(startTime);
     
     if (isToday(date)) {
-      return 'Heute';
+      return texts.today;
     } else if (isTomorrow(date)) {
-      return 'Morgen';
+      return texts.tomorrow;
     } else if (isThisWeek(date)) {
       return format(date, 'EEEE', { locale: de });
     } else {
@@ -35,13 +38,13 @@ export function EventsCalendar({ events }: EventsCalendarProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
-          Anstehende Termine
+          {texts.upcomingEvents}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {upcomingEvents.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Keine anstehenden Termine
+            {texts.noEvents}
           </p>
         ) : (
           <div className="space-y-4">

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Trophy, Target, CheckCircle, Clock } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
@@ -10,9 +11,11 @@ type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 interface ProgressOverviewProps {
   tasks: Task[];
   modules: LearningModule[];
+  language?: string;
 }
 
-export function ProgressOverview({ tasks, modules }: ProgressOverviewProps) {
+export function ProgressOverview({ tasks, modules, language = 'de' }: ProgressOverviewProps) {
+  const texts = getTranslation('progressOverview', language as Language);
   const completedTasks = tasks.filter(task => task.status === 'DONE').length;
   const inProgressTasks = tasks.filter(task => task.status === 'IN_PROGRESS').length;
   const totalTasks = tasks.length;
@@ -21,21 +24,21 @@ export function ProgressOverview({ tasks, modules }: ProgressOverviewProps) {
 
   const stats = [
     {
-      title: 'Abgeschlossene Aufgaben',
+      title: texts.completedTasks,
       value: completedTasks,
       total: totalTasks,
       icon: CheckCircle,
       color: 'text-green-500'
     },
     {
-      title: 'In Bearbeitung',
+      title: texts.inProgress,
       value: inProgressTasks,
       total: totalTasks,
       icon: Clock,
       color: 'text-blue-500'
     },
     {
-      title: 'Lernmodule verfügbar',
+      title: texts.modulesAvailable,
       value: modules.length,
       icon: Target,
       color: 'text-purple-500'
@@ -49,19 +52,19 @@ export function ProgressOverview({ tasks, modules }: ProgressOverviewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
-            Lernfortschritt
+            {texts.learningProgress}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-between text-sm">
-              <span>Gesamtfortschritt</span>
+              <span>{texts.overallProgress}</span>
               <span className="font-medium">{Math.round(completionRate)}%</span>
             </div>
             <Progress value={completionRate} className="h-3" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{completedTasks} von {totalTasks} Aufgaben abgeschlossen</span>
-              <span>{totalTasks - completedTasks} verbleibend</span>
+              <span>{completedTasks} {texts.of} {totalTasks} {texts.tasksCompleted}</span>
+              <span>{totalTasks - completedTasks} {texts.remaining}</span>
             </div>
           </div>
         </CardContent>
