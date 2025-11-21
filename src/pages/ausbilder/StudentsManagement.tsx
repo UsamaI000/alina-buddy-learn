@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Users, Search, ArrowLeft, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppUser } from '@/types/auth';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface Student {
   id: string;
@@ -31,25 +32,7 @@ export default function StudentsManagement({ user, language, onBack }: StudentsM
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const t = {
-    de: {
-      title: 'Auszubildende verwalten',
-      subtitle: 'Übersicht aller Auszubildenden',
-      search: 'Suchen...',
-      back: 'Zurück',
-      noStudents: 'Keine Auszubildenden gefunden',
-      tasks: 'Aufgaben',
-      completed: 'Abgeschlossen',
-      open: 'Offen',
-      total: 'Gesamt',
-      apprenticeship: 'Ausbildung',
-      company: 'Unternehmen',
-      since: 'Seit'
-    }
-  };
-
-  const texts = t[language as keyof typeof t] || t.de;
+  const texts = getTranslation('studentsManagement', language as Language);
 
   useEffect(() => {
     fetchStudents();
@@ -110,7 +93,7 @@ export default function StudentsManagement({ user, language, onBack }: StudentsM
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Lade Auszubildende...</p>
+          <p className="text-muted-foreground">{ texts.loading}</p>
         </div>
       </div>
     );

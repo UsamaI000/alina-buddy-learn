@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { AppUser } from '@/types/auth';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface AusbilderCalendarProps {
   user: AppUser;
@@ -26,21 +27,24 @@ interface AusbilderCalendarProps {
   onBack: () => void;
 }
 
-const eventTypeLabels = {
-  exam: { label: 'Prüfung', color: 'bg-red-500' },
-  training: { label: 'Schulung', color: 'bg-blue-500' },
-  meeting: { label: 'Meeting', color: 'bg-green-500' },
-  other: { label: 'Sonstiges', color: 'bg-gray-500' },
-};
-
 export default function AusbilderCalendar({ user, language, onBack }: AusbilderCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  const texts = getTranslation('ausbilderCalendar', language as Language);
 
   const { events, loading, createEvent, updateEvent, deleteEvent } = useEvents();
+
+  const eventTypeLabels = {
+    exam: { label: texts.exam, color: 'bg-red-500' },
+    training: { label: texts.training, color: 'bg-blue-500' },
+    meeting: { label: texts.meeting, color: 'bg-green-500' },
+    other: { label: texts.other, color: 'bg-gray-500' },
+  };
+
+  const weekDays = [texts.monday, texts.tuesday, texts.wednesday, texts.thursday, texts.friday, texts.saturday, texts.sunday];
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -87,9 +91,9 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
           user_id: user.id,
         });
       }
-      toast.success('Event wurde erfolgreich erstellt');
+      toast.success(texts.eventCreated);
     } catch (error) {
-      toast.error('Fehler beim Erstellen des Events');
+      toast.error(texts.createError);
     }
   };
 
@@ -104,10 +108,10 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
         end_time: data.end_time.toISOString(),
         event_type: data.event_type,
       });
-      toast.success('Event wurde erfolgreich aktualisiert');
+      toast.success(texts.eventUpdated);
       setEditingEvent(null);
     } catch (error) {
-      toast.error('Fehler beim Aktualisieren des Events');
+      toast.error(texts.updateError);
     }
   };
 
@@ -116,10 +120,10 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
     
     try {
       await deleteEvent(deleteEventId);
-      toast.success('Event wurde erfolgreich gelöscht');
+      toast.success(texts.eventDeleted);
       setDeleteEventId(null);
     } catch (error) {
-      toast.error('Fehler beim Löschen des Events');
+      toast.error(texts.deleteError);
     }
   };
 
@@ -130,13 +134,13 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={onBack}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
+              {texts.back}
             </Button>
-            <h1 className="text-3xl font-bold">Kalender - Ausbilder</h1>
+            <h1 className="text-3xl font-bold">{texts.title}</h1>
           </div>
           <Button onClick={() => { setEditingEvent(null); setShowEventDialog(true); }}>
             <Plus className="h-4 w-4 mr-2" />
-            Neues Event
+            {texts.newEvent}
           </Button>
         </div>
 
@@ -157,10 +161,10 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Lade Kalender...</div>
+                <div className="text-center py-8 text-muted-foreground">{texts.loading}</div>
               ) : (
                 <div className="grid grid-cols-7 gap-2">
-                  {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
+                  {weekDays.map(day => (
                     <div key={day} className="text-center font-medium text-sm text-muted-foreground p-2">
                       {day}
                     </div>
@@ -209,7 +213,7 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
             </CardHeader>
             <CardContent>
               {eventsOnSelectedDate.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Keine Events an diesem Tag</p>
+                <p className="text-muted-foreground text-sm">{texts.noEvents}</p>
               ) : (
                 <div className="space-y-3">
                   {eventsOnSelectedDate.map(event => (
@@ -267,20 +271,20 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
         onOpenChange={setShowEventDialog}
         onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
         defaultValues={editingEvent}
-        title={editingEvent ? 'Event bearbeiten' : 'Neues Event erstellen'}
+        title={editingEvent ? texts.editEvent : texts.createEvent}
       />
 
       <AlertDialog open={!!deleteEventId} onOpenChange={() => setDeleteEventId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Event löschen?</AlertDialogTitle>
+            <AlertDialogTitle>{texts.deleteEvent}</AlertDialogTitle>
             <AlertDialogDescription>
-              Möchten Sie dieses Event wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+              {texts.deleteConfirm}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteEvent}>Löschen</AlertDialogAction>
+            <AlertDialogCancel>{texts.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEvent}>{texts.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

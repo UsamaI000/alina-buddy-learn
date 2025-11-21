@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { KnowledgeBaseManager } from '@/components/KnowledgeBaseManager';
 import type { AppUser } from '@/types/auth';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface LearningModule {
   id: string;
@@ -40,32 +41,7 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
     apprenticeship: ''
   });
   const { toast } = useToast();
-
-  const t = {
-    de: {
-      title: 'Lerninhalte verwalten',
-      subtitle: 'Erstelle und bearbeite Lernmodule',
-      search: 'Suchen...',
-      back: 'Zurück',
-      addModule: 'Neues Modul',
-      editModule: 'Modul bearbeiten',
-      moduleTitle: 'Titel',
-      moduleDescription: 'Beschreibung',
-      apprenticeship: 'Ausbildungsrichtung',
-      save: 'Speichern',
-      cancel: 'Abbrechen',
-      delete: 'Löschen',
-      edit: 'Bearbeiten',
-      noModules: 'Keine Lernmodule gefunden',
-      created: 'Erstellt',
-      updated: 'Aktualisiert',
-      tabModules: 'Module verwalten',
-      tabKnowledge: 'Wissensdatenbank',
-      selectModuleFirst: 'Bitte wähle zuerst ein Lernmodul aus, um Wissensartikel hinzuzufügen.'
-    }
-  };
-
-  const texts = t[language as keyof typeof t] || t.de;
+  const texts = getTranslation('learningModulesManagement', language as Language);
 
   useEffect(() => {
     fetchModules();
@@ -84,8 +60,8 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
     } catch (error) {
       console.error('Error fetching modules:', error);
       toast({
-        title: 'Fehler',
-        description: 'Lernmodule konnten nicht geladen werden.',
+        title: texts.error,
+        description: texts.loadError,
         variant: 'destructive'
       });
     } finally {
@@ -96,8 +72,8 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
   const handleSave = async () => {
     if (!formData.title || !formData.apprenticeship) {
       toast({
-        title: 'Fehler',
-        description: 'Titel und Ausbildungsrichtung sind erforderlich.',
+        title: texts.error,
+        description: texts.requiredFields,
         variant: 'destructive'
       });
       return;
@@ -113,8 +89,8 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
         if (error) throw error;
 
         toast({
-          title: 'Erfolg',
-          description: 'Lernmodul wurde aktualisiert.'
+          title: texts.success,
+          description: texts.moduleUpdated
         });
       } else {
         const { error } = await supabase
@@ -124,8 +100,8 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
         if (error) throw error;
 
         toast({
-          title: 'Erfolg',
-          description: 'Lernmodul wurde erstellt.'
+          title: texts.success,
+          description: texts.moduleCreated
         });
       }
 
@@ -136,15 +112,15 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
     } catch (error) {
       console.error('Error saving module:', error);
       toast({
-        title: 'Fehler',
-        description: 'Lernmodul konnte nicht gespeichert werden.',
+        title: texts.error,
+        description: texts.saveError,
         variant: 'destructive'
       });
     }
   };
 
   const handleDelete = async (moduleId: string) => {
-    if (!confirm('Möchten Sie dieses Lernmodul wirklich löschen?')) return;
+    if (!confirm(texts.confirmDelete)) return;
 
     try {
       const { error } = await supabase
@@ -155,16 +131,16 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
       if (error) throw error;
 
       toast({
-        title: 'Erfolg',
-        description: 'Lernmodul wurde gelöscht.'
+        title: texts.success,
+        description: texts.moduleDeleted
       });
       
       fetchModules();
     } catch (error) {
       console.error('Error deleting module:', error);
       toast({
-        title: 'Fehler',
-        description: 'Lernmodul konnte nicht gelöscht werden.',
+        title: texts.error,
+        description: texts.deleteError,
         variant: 'destructive'
       });
     }
@@ -197,7 +173,7 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Lade Lernmodule...</p>
+          <p className="text-muted-foreground">{texts.loading}</p>
         </div>
       </div>
     );
