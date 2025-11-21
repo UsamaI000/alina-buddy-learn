@@ -12,6 +12,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import type { AppUser } from '@/types/auth';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface AzubiHomeProps {
   user: AppUser;
@@ -23,38 +24,17 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
   const { modules, loading: modulesLoading } = useLearningModules(user.apprenticeship);
   const { tasks, loading: tasksLoading, updateTaskStatus } = useTasks();
   const { events, loading: eventsLoading } = useEvents();
+  const texts = getTranslation('azubiHome', language as Language);
 
   // Sort modules by created_at (newest first) for dashboard display
   const recentModules = [...modules]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
-  const t = {
-    de: {
-      title: 'Willkommen zurück',
-      subtitle: 'Dein Lernbereich',
-      learningPath: 'Lernmodule',
-      tasks: 'Meine Aufgaben',
-      chat: 'Chat mit ALINA',
-      calendar: 'Termine',
-      achievements: 'Erfolge',
-      progress: 'Lernfortschritt',
-      continue: 'Weiter lernen',
-      startChat: 'Chat starten',
-      viewCalendar: 'Kalender öffnen',
-      viewAchievements: 'Erfolge ansehen',
-      viewAll: 'Alle anzeigen',
-      noTasks: 'Keine Aufgaben vorhanden',
-      noModules: 'Keine Lernmodule verfügbar'
-    }
-  };
-
-  const texts = t[language as keyof typeof t] || t.de;
-
   const handleStartModule = (moduleId: string) => {
     toast({
-      title: "Lernmodul gestartet",
-      description: "Das Lernmodul wurde geöffnet.",
+      title: texts.moduleStarted,
+      description: texts.moduleOpened,
     });
     // TODO: Navigate to module content
   };
@@ -62,8 +42,8 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
   const handleTaskStatusUpdate = async (taskId: string, status: any) => {
     await updateTaskStatus(taskId, status);
     toast({
-      title: "Aufgabe aktualisiert",
-      description: "Der Status wurde erfolgreich geändert.",
+      title: texts.taskUpdated,
+      description: texts.taskStatusChanged,
     });
   };
 
@@ -76,7 +56,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
           </h1>
           <p className="text-muted-foreground mb-4">{texts.subtitle}</p>
           <div className="flex gap-2">
-            <Badge variant="secondary">Auszubildende/r</Badge>
+            <Badge variant="secondary">{texts.roleStudent}</Badge>
             <Badge variant="outline">{user.apprenticeship}</Badge>
           </div>
         </div>
@@ -192,7 +172,7 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Stelle Fragen und lerne interaktiv mit ALINA.
+                    {texts.chatDesc}
                   </p>
                   <Button className="w-full">
                     {texts.startChat}
