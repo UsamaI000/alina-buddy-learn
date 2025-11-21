@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, Users, BookOpen, CheckCircle, Clock, ArrowLeft, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppUser } from '@/types/auth';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface AnalyticsData {
   totalStudents: number;
@@ -35,29 +36,7 @@ interface AnalyticsDashboardProps {
 export default function AnalyticsDashboard({ user, language, onBack }: AnalyticsDashboardProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const t = {
-    de: {
-      title: 'Statistiken & Analytics',
-      subtitle: 'Übersicht über Fortschritte und Leistungen',
-      back: 'Zurück',
-      overview: 'Übersicht',
-      students: 'Auszubildende',
-      modules: 'Lernmodule',
-      tasks: 'Aufgaben gesamt',
-      completed: 'Abgeschlossen',
-      open: 'Offen',
-      inProgress: 'In Bearbeitung',
-      studentProgress: 'Fortschritt der Auszubildenden',
-      moduleStats: 'Modul-Statistiken',
-      completionRate: 'Abschlussquote',
-      avgCompletion: 'Durchschnittliche Abschlussquote',
-      tasksPerModule: 'Aufgaben pro Modul',
-      loading: 'Lade Statistiken...'
-    }
-  };
-
-  const texts = t[language as keyof typeof t] || t.de;
+  const texts = getTranslation('analyticsDashboard', language as Language);
 
   useEffect(() => {
     fetchAnalytics();
@@ -269,7 +248,7 @@ export default function AnalyticsDashboard({ user, language, onBack }: Analytics
                     <div>
                       <p className="font-medium">{student.student}</p>
                       <p className="text-sm text-muted-foreground">
-                        {student.completedTasks} von {student.totalTasks} Aufgaben
+                        {student.completedTasks} {texts.of} {student.totalTasks} {texts.tasksLabel}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -300,7 +279,7 @@ export default function AnalyticsDashboard({ user, language, onBack }: Analytics
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="font-medium truncate">{module.module}</p>
-                      <Badge variant="outline">{module.taskCount} Aufgaben</Badge>
+                      <Badge variant="outline">{module.taskCount} {texts.tasksLabel}</Badge>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-full bg-muted rounded-full h-2">

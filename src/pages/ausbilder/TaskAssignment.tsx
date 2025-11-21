@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table';
 import type { AppUser } from '@/types/auth';
 import type { Database } from '@/integrations/supabase/types';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 type TaskStatus = Database['public']['Enums']['task_status'];
 
@@ -39,20 +40,21 @@ interface TaskAssignmentProps {
   onBack: () => void;
 }
 
-const statusConfig = {
-  OPEN: { label: 'Offen', icon: Circle, color: 'text-yellow-600', variant: 'default' as const },
-  IN_PROGRESS: { label: 'In Bearbeitung', icon: Clock, color: 'text-blue-600', variant: 'secondary' as const },
-  DONE: { label: 'Erledigt', icon: CheckCircle, color: 'text-green-600', variant: 'outline' as const },
-};
-
 export default function TaskAssignment({ user, language, onBack }: TaskAssignmentProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const texts = getTranslation('taskAssignment', language as Language);
 
   const { tasks, loading, createTask, updateTask, deleteTask: removeTask } = useTasks();
+
+  const statusConfig = {
+    OPEN: { label: texts.open, icon: Circle, color: 'text-yellow-600', variant: 'default' as const },
+    IN_PROGRESS: { label: texts.inProgress, icon: Clock, color: 'text-blue-600', variant: 'secondary' as const },
+    DONE: { label: texts.done, icon: CheckCircle, color: 'text-green-600', variant: 'outline' as const },
+  };
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -79,9 +81,9 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
           })
         )
       );
-      toast.success('Aufgabe(n) erfolgreich erstellt');
+      toast.success(texts.tasksCreated);
     } catch (error) {
-      toast.error('Fehler beim Erstellen der Aufgabe(n)');
+      toast.error(texts.createError);
     }
   };
 
@@ -95,10 +97,10 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
         learning_module_id: data.learning_module_id,
         due_date: data.due_date.toISOString(),
       });
-      toast.success('Aufgabe erfolgreich aktualisiert');
+      toast.success(texts.taskUpdated);
       setEditingTask(null);
     } catch (error) {
-      toast.error('Fehler beim Aktualisieren der Aufgabe');
+      toast.error(texts.updateError);
     }
   };
 
@@ -107,18 +109,18 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
     
     try {
       await removeTask(deleteTaskId);
-      toast.success('Aufgabe erfolgreich gelöscht');
+      toast.success(texts.taskDeleted);
       setDeleteTaskId(null);
     } catch (error) {
-      toast.error('Fehler beim Löschen der Aufgabe');
+      toast.error(texts.deleteError);
     }
   };
 
   const formatDueDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    if (isToday(date)) return '🔥 Heute';
-    if (isPast(date)) return `🔴 ${format(date, 'dd.MM.yyyy', { locale: de })}`;
+    if (isToday(date)) return texts.today;
+    if (isPast(date)) return `${texts.overdue} ${format(date, 'dd.MM.yyyy', { locale: de })}`;
     return format(date, 'dd.MM.yyyy', { locale: de });
   };
 
@@ -129,13 +131,13 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={onBack}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
+              {texts.back}
             </Button>
-            <h1 className="text-3xl font-bold">Aufgaben verwalten</h1>
+            <h1 className="text-3xl font-bold">{texts.title}</h1>
           </div>
           <Button onClick={() => { setEditingTask(null); setShowTaskDialog(true); }}>
             <Plus className="h-4 w-4 mr-2" />
-            Neue Aufgabe
+            {texts.newTask}
           </Button>
         </div>
 
@@ -145,7 +147,7 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Suche nach Aufgaben..."
+                  placeholder={texts.search}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -153,26 +155,26 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Status filtern" />
+                  <SelectValue placeholder={texts.filterStatus} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Status</SelectItem>
-                  <SelectItem value="OPEN">Offen</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Bearbeitung</SelectItem>
-                  <SelectItem value="DONE">Erledigt</SelectItem>
+                  <SelectItem value="all">{texts.allStatuses}</SelectItem>
+                  <SelectItem value="OPEN">{texts.open}</SelectItem>
+                  <SelectItem value="IN_PROGRESS">{texts.inProgress}</SelectItem>
+                  <SelectItem value="DONE">{texts.done}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Lade Aufgaben...</div>
+              <div className="text-center py-8 text-muted-foreground">{texts.loading}</div>
             ) : filteredTasks.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">Keine Aufgaben gefunden</p>
+                <p className="text-muted-foreground mb-4">{texts.noTasks}</p>
                 <Button onClick={() => setShowTaskDialog(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Erste Aufgabe erstellen
+                  {texts.createFirst}
                 </Button>
               </div>
             ) : (
@@ -180,10 +182,10 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Aufgabe</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Fällig</TableHead>
-                      <TableHead className="text-right">Aktionen</TableHead>
+                      <TableHead>{texts.task}</TableHead>
+                      <TableHead>{texts.status}</TableHead>
+                      <TableHead>{texts.due}</TableHead>
+                      <TableHead className="text-right">{texts.actions}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -252,20 +254,20 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
         onOpenChange={setShowTaskDialog}
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         defaultValues={editingTask}
-        title={editingTask ? 'Aufgabe bearbeiten' : 'Neue Aufgabe erstellen'}
+        title={editingTask ? texts.editTask : texts.createTask}
       />
 
       <AlertDialog open={!!deleteTaskId} onOpenChange={() => setDeleteTaskId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Aufgabe löschen?</AlertDialogTitle>
+            <AlertDialogTitle>{texts.deleteTask}</AlertDialogTitle>
             <AlertDialogDescription>
-              Möchten Sie diese Aufgabe wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+              {texts.deleteConfirm}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteTask}>Löschen</AlertDialogAction>
+            <AlertDialogCancel>{texts.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTask}>{texts.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
