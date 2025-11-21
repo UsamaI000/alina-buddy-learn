@@ -255,6 +255,7 @@ export default function TaskAssignment({ user, language, onBack }: TaskAssignmen
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         defaultValues={editingTask}
         title={editingTask ? texts.editTask : texts.createTask}
+        language={language}
       />
 
       <AlertDialog open={!!deleteTaskId} onOpenChange={() => setDeleteTaskId(null)}>

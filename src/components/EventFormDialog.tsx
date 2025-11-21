@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,37 +14,40 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { StudentMultiSelect } from './StudentMultiSelect';
 import { cn } from '@/lib/utils';
-
-const eventSchema = z.object({
-  title: z.string().min(1, 'Titel ist erforderlich'),
-  description: z.string().optional(),
-  start_time: z.date({ required_error: 'Startzeit ist erforderlich' }),
-  end_time: z.date({ required_error: 'Endzeit ist erforderlich' }),
-  event_type: z.enum(['exam', 'training', 'meeting', 'other']),
-  assigned_students: z.array(z.string()).optional(),
-}).refine(data => data.end_time > data.start_time, {
-  message: 'Endzeit muss nach Startzeit liegen',
-  path: ['end_time'],
-});
-
-type EventFormData = z.infer<typeof eventSchema>;
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface EventFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: EventFormData) => Promise<void>;
-  defaultValues?: Partial<EventFormData>;
+  onSubmit: (data: any) => Promise<void>;
+  defaultValues?: Partial<any>;
   title?: string;
+  language?: string;
 }
 
-const eventTypeLabels = {
-  exam: 'Prüfung',
-  training: 'Schulung',
-  meeting: 'Meeting',
-  other: 'Sonstiges',
-};
-
-export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, title = 'Event erstellen' }: EventFormDialogProps) {
+export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, title, language = 'de' }: EventFormDialogProps) {
+  const texts = getTranslation('eventForm', language as Language);
+  
+  const eventSchema = useMemo(() => z.object({
+    title: z.string().min(1, texts.titleRequired),
+    description: z.string().optional(),
+    start_time: z.date({ required_error: texts.dateRequired }),
+    end_time: z.date({ required_error: texts.endTimeRequired }),
+    event_type: z.enum(['exam', 'training', 'meeting', 'other']),
+    assigned_students: z.array(z.string()).optional(),
+  }).refine(data => data.end_time > data.start_time, {
+    message: texts.endTimeError,
+    path: ['end_time'],
+  }), [texts]);
+  
+  type EventFormData = z.infer<typeof eventSchema>;
+  
+  const eventTypeLabels = {
+    exam: texts.exam,
+    training: texts.training,
+    meeting: texts.meeting,
+    other: texts.other,
+  };
   const initialStartTime = defaultValues?.start_time ? format(defaultValues.start_time, 'HH:mm') : '09:00';
   const initialEndTime = defaultValues?.end_time ? format(defaultValues.end_time, 'HH:mm') : '10:00';
   const [startTime, setStartTime] = useState(initialStartTime);
@@ -84,22 +87,22 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{title || texts.createEvent}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="title">Titel *</Label>
+            <Label htmlFor="title">{texts.title} *</Label>
             <Input id="title" {...register('title')} />
             {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
           </div>
 
           <div>
-            <Label htmlFor="description">Beschreibung</Label>
+            <Label htmlFor="description">{texts.description}</Label>
             <Textarea id="description" {...register('description')} rows={3} />
           </div>
 
           <div>
-            <Label>Event-Typ *</Label>
+            <Label>{texts.eventType} *</Label>
             <Select value={eventType} onValueChange={(value) => setValue('event_type', value as any)}>
               <SelectTrigger>
                 <SelectValue />
@@ -116,7 +119,7 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Datum *</Label>
+              <Label>{texts.date} *</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -124,7 +127,7 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
                     className={cn('w-full justify-start text-left font-normal', !selectedDate && 'text-muted-foreground')}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, 'dd.MM.yyyy') : 'Datum wählen'}
+                    {selectedDate ? format(selectedDate, 'dd.MM.yyyy') : texts.selectDate}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -156,7 +159,7 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="startTime">Von *</Label>
+              <Label htmlFor="startTime">{texts.from} *</Label>
               <Input
                 id="startTime"
                 type="time"
@@ -174,7 +177,7 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
               />
             </div>
             <div>
-              <Label htmlFor="endTime">Bis *</Label>
+              <Label htmlFor="endTime">{texts.to} *</Label>
               <Input
                 id="endTime"
                 type="time"
@@ -195,7 +198,7 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
           {errors.end_time && <p className="text-sm text-destructive mt-1">{errors.end_time.message}</p>}
 
           <div>
-            <Label>Auszubildende zuweisen (optional)</Label>
+            <Label>{texts.assignStudents}</Label>
             <StudentMultiSelect
               selectedStudents={assignedStudents}
               onChange={(students) => setValue('assigned_students', students)}
@@ -204,10 +207,10 @@ export function EventFormDialog({ open, onOpenChange, onSubmit, defaultValues, t
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Abbrechen
+              {texts.cancel}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Speichern...' : 'Speichern'}
+              {isSubmitting ? texts.saving : texts.save}
             </Button>
           </DialogFooter>
         </form>

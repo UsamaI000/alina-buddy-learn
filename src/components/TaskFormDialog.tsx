@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,23 +15,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { StudentMultiSelect } from './StudentMultiSelect';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-
-const taskSchema = z.object({
-  title: z.string().min(1, 'Titel ist erforderlich'),
-  description: z.string().optional(),
-  learning_module_id: z.string().min(1, 'Lernmodul ist erforderlich'),
-  due_date: z.date({ required_error: 'Fälligkeitsdatum ist erforderlich' }),
-  assigned_students: z.array(z.string()).min(1, 'Mindestens ein Auszubildender muss ausgewählt werden'),
-});
-
-type TaskFormData = z.infer<typeof taskSchema>;
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface TaskFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: TaskFormData) => Promise<void>;
-  defaultValues?: Partial<TaskFormData>;
+  onSubmit: (data: any) => Promise<void>;
+  defaultValues?: Partial<any>;
   title?: string;
+  language?: string;
 }
 
 interface LearningModule {
@@ -39,10 +31,21 @@ interface LearningModule {
   title: string;
 }
 
-export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, title = 'Aufgabe erstellen' }: TaskFormDialogProps) {
+export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, title, language = 'de' }: TaskFormDialogProps) {
+  const texts = getTranslation('taskForm', language as Language);
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingModules, setLoadingModules] = useState(true);
+  
+  const taskSchema = useMemo(() => z.object({
+    title: z.string().min(1, texts.titleRequired),
+    description: z.string().optional(),
+    learning_module_id: z.string().min(1, texts.learningModuleRequired),
+    due_date: z.date({ required_error: texts.dueDateRequired }),
+    assigned_students: z.array(z.string()).min(1, texts.assignStudentsRequired),
+  }), [texts]);
+  
+  type TaskFormData = z.infer<typeof taskSchema>;
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -96,28 +99,28 @@ export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, ti
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{title || texts.createTask}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="title">Titel *</Label>
+            <Label htmlFor="title">{texts.title} *</Label>
             <Input id="title" {...register('title')} />
             {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
           </div>
 
           <div>
-            <Label htmlFor="description">Beschreibung</Label>
+            <Label htmlFor="description">{texts.description}</Label>
             <Textarea id="description" {...register('description')} rows={3} />
           </div>
 
           <div>
-            <Label>Lernmodul *</Label>
+            <Label>{texts.learningModule} *</Label>
             {loadingModules ? (
-              <p className="text-sm text-muted-foreground">Lade Module...</p>
+              <p className="text-sm text-muted-foreground">{texts.loadingModules}</p>
             ) : (
               <Select value={learningModuleId} onValueChange={(value) => setValue('learning_module_id', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Modul auswählen" />
+                  <SelectValue placeholder={texts.selectModule} />
                 </SelectTrigger>
                 <SelectContent>
                   {modules.map((module) => (
@@ -132,7 +135,7 @@ export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, ti
           </div>
 
           <div>
-            <Label>Fälligkeitsdatum *</Label>
+            <Label>{texts.dueDate} *</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -140,7 +143,7 @@ export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, ti
                   className={cn('w-full justify-start text-left font-normal', !dueDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate ? format(dueDate, 'dd.MM.yyyy') : 'Datum wählen'}
+                  {dueDate ? format(dueDate, 'dd.MM.yyyy') : texts.selectDate}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -157,7 +160,7 @@ export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, ti
           </div>
 
           <div>
-            <Label>Auszubildende zuweisen *</Label>
+            <Label>{texts.assignStudents} *</Label>
             <StudentMultiSelect
               selectedStudents={assignedStudents}
               onChange={(students) => setValue('assigned_students', students)}
@@ -167,10 +170,10 @@ export function TaskFormDialog({ open, onOpenChange, onSubmit, defaultValues, ti
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Abbrechen
+              {texts.cancel}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Speichern...' : 'Speichern'}
+              {isSubmitting ? texts.saving : texts.save}
             </Button>
           </DialogFooter>
         </form>

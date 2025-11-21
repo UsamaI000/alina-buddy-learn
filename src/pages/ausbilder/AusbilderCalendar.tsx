@@ -272,6 +272,7 @@ export default function AusbilderCalendar({ user, language, onBack }: AusbilderC
         onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
         defaultValues={editingEvent}
         title={editingEvent ? texts.editEvent : texts.createEvent}
+        language={language}
       />
 
       <AlertDialog open={!!deleteEventId} onOpenChange={() => setDeleteEventId(null)}>
