@@ -104,6 +104,9 @@ export const translations = {
       profile: 'Profil',
       logout: 'Abmelden',
       login: 'Anmelden',
+      myArea: 'Mein Bereich',
+      instructorDashboard: 'Ausbilder Dashboard',
+      alinaChat: 'ALINA Chat',
     },
     en: {
       home: 'Home',
@@ -114,6 +117,9 @@ export const translations = {
       profile: 'Profile',
       logout: 'Logout',
       login: 'Login',
+      myArea: 'My Area',
+      instructorDashboard: 'Instructor Dashboard',
+      alinaChat: 'ALINA Chat',
     },
     ar: {
       home: 'الرئيسية',
@@ -124,6 +130,9 @@ export const translations = {
       profile: 'الملف الشخصي',
       logout: 'تسجيل الخروج',
       login: 'تسجيل الدخول',
+      myArea: 'منطقتي',
+      instructorDashboard: 'لوحة تحكم المدرب',
+      alinaChat: 'دردشة ALINA',
     },
     uk: {
       home: 'Головна',
@@ -134,6 +143,9 @@ export const translations = {
       profile: 'Профіль',
       logout: 'Вийти',
       login: 'Увійти',
+      myArea: 'Моя область',
+      instructorDashboard: 'Панель інструктора',
+      alinaChat: 'Чат ALINA',
     },
   },
 
