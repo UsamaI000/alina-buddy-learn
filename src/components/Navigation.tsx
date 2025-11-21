@@ -18,6 +18,7 @@ import {
 import type { AppUser } from "@/types/auth";
 import { NAV_CONFIG } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { getTranslation, type Language } from "@/utils/i18n";
 
 interface NavigationProps {
   currentUser?: AppUser;
@@ -40,6 +41,7 @@ export default function Navigation({
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const t = getTranslation('navigation', currentLanguage as Language);
 
   const getNavItems = () => {
     if (!currentUser) return [];
@@ -127,17 +129,17 @@ export default function Navigation({
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="h-4 w-4 mr-2" />
-                    Profil
+                    {t.profile}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
-                    Abmelden
+                    {t.logout}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button onClick={() => navigate("/login")}>
-                Anmelden
+                {t.login}
               </Button>
             )}
 
