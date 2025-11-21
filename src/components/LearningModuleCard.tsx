@@ -4,15 +4,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Clock } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 type LearningModule = Database['public']['Tables']['learning_modules']['Row'];
 
 interface LearningModuleCardProps {
   module: LearningModule;
   onStart: (moduleId: string) => void;
+  language?: string;
 }
 
-export function LearningModuleCard({ module, onStart }: LearningModuleCardProps) {
+export function LearningModuleCard({ module, onStart, language = 'de' }: LearningModuleCardProps) {
+  const texts = getTranslation('learningModuleCard', language as Language);
+  
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -26,18 +30,18 @@ export function LearningModuleCard({ module, onStart }: LearningModuleCardProps)
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-          {module.description || 'Kein Beschreibung verfügbar'}
+          {module.description || texts.noDescription}
         </p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>Erstellt: {new Date(module.created_at).toLocaleDateString('de-DE')}</span>
+            <span>{texts.created}: {new Date(module.created_at).toLocaleDateString(language === 'de' ? 'de-DE' : 'en-GB')}</span>
           </div>
           <Button 
             size="sm" 
             onClick={() => onStart(module.id)}
           >
-            Lernen starten
+            {texts.startLearning}
           </Button>
         </div>
       </CardContent>

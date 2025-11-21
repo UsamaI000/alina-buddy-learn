@@ -6,6 +6,7 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { format, isAfter, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import type { Database } from '@/integrations/supabase/types';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskStatus = Database['public']['Enums']['task_status'];
@@ -13,9 +14,11 @@ type TaskStatus = Database['public']['Enums']['task_status'];
 interface TaskCardProps {
   task: Task;
   onUpdateStatus: (taskId: string, status: TaskStatus) => void;
+  language?: string;
 }
 
-export function TaskCard({ task, onUpdateStatus }: TaskCardProps) {
+export function TaskCard({ task, onUpdateStatus, language = 'de' }: TaskCardProps) {
+  const texts = getTranslation('taskCard', language as Language);
   const getStatusIcon = () => {
     switch (task.status) {
       case 'DONE':
@@ -55,8 +58,8 @@ export function TaskCard({ task, onUpdateStatus }: TaskCardProps) {
             {task.title}
           </CardTitle>
           <Badge variant={getStatusVariant()}>
-            {task.status === 'DONE' ? 'Abgeschlossen' : 
-             task.status === 'IN_PROGRESS' ? 'In Bearbeitung' : 'Offen'}
+            {task.status === 'DONE' ? texts.completed : 
+             task.status === 'IN_PROGRESS' ? texts.inProgress : texts.open}
           </Badge>
         </div>
       </CardHeader>
@@ -70,16 +73,16 @@ export function TaskCard({ task, onUpdateStatus }: TaskCardProps) {
           <div className="flex items-center gap-2">
             {task.due_date && (
               <span className={`text-sm ${isOverdue && task.status !== 'DONE' ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
-                Fällig: {format(parseISO(task.due_date), 'dd.MM.yyyy', { locale: de })}
+                {texts.due}: {format(parseISO(task.due_date), 'dd.MM.yyyy', { locale: de })}
               </span>
             )}
             {isOverdue && task.status !== 'DONE' && (
-              <Badge variant="destructive" className="text-xs">Überfällig</Badge>
+              <Badge variant="destructive" className="text-xs">{texts.overdue}</Badge>
             )}
           </div>
           {task.status !== 'DONE' && (
             <Button size="sm" onClick={handleStatusChange}>
-              {task.status === 'OPEN' ? 'Starten' : 'Abschließen'}
+              {task.status === 'OPEN' ? texts.start : texts.complete}
             </Button>
           )}
         </div>
