@@ -350,6 +350,7 @@ export default function LearningModulesManagement({ user, language, onBack }: Le
               <KnowledgeBaseManager 
                 learningModuleId={selectedModule.id}
                 learningModuleName={selectedModule.title}
+                language={language}
               />
             ) : (
               <Card>

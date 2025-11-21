@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'sonner';
 import { Loader2, Trash2, BookOpen } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { getTranslation, type Language } from '@/utils/i18n';
 
 interface KnowledgeBaseManagerProps {
   learningModuleId: string;
   learningModuleName: string;
+  language?: string;
 }
 
 interface KnowledgeArticle {
@@ -21,7 +23,8 @@ interface KnowledgeArticle {
   chunk_count: number;
 }
 
-export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: KnowledgeBaseManagerProps) {
+export function KnowledgeBaseManager({ learningModuleId, learningModuleName, language = 'de' }: KnowledgeBaseManagerProps) {
+  const texts = getTranslation('knowledgeBase', language as Language);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +66,7 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
       setArticles(grouped);
     } catch (error) {
       console.error('Error fetching articles:', error);
-      toast.error('Fehler beim Laden der Artikel');
+      toast.error(texts.loadError);
     } finally {
       setIsFetching(false);
     }
@@ -71,7 +74,7 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
 
   const handleIngest = async () => {
     if (!title.trim() || !content.trim()) {
-      toast.error('Bitte Titel und Inhalt eingeben');
+      toast.error(texts.titleRequired);
       return;
     }
 
@@ -90,13 +93,13 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
 
       if (error) throw error;
 
-      toast.success(`${data.chunks_created} Chunks erfolgreich erstellt!`);
+      toast.success(texts.chunksCreated.replace('{count}', data.chunks_created.toString()));
       setTitle('');
       setContent('');
       fetchArticles();
     } catch (error) {
       console.error('Ingestion error:', error);
-      toast.error('Fehler beim Speichern des Artikels');
+      toast.error(texts.saveError);
     } finally {
       setIsLoading(false);
     }
@@ -112,11 +115,11 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
 
       if (error) throw error;
 
-      toast.success('Artikel gelöscht');
+      toast.success(texts.deleteSuccess);
       fetchArticles();
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error('Fehler beim Löschen');
+      toast.error(texts.deleteError);
     }
   };
 
@@ -124,38 +127,38 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Wissensartikel hinzufügen</CardTitle>
+          <CardTitle>{texts.addArticle}</CardTitle>
           <CardDescription>
-            Modul: {learningModuleName}
+            {texts.module}: {learningModuleName}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Titel</label>
+            <label className="text-sm font-medium">{texts.title}</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="z.B. Grundlagen der Elektrotechnik"
+              placeholder={texts.titlePlaceholder}
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Inhalt</label>
+            <label className="text-sm font-medium">{texts.content}</label>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Fügen Sie hier den Lerninhalt ein... Der Text wird automatisch in Chunks aufgeteilt und für die KI-Suche optimiert."
+              placeholder={texts.contentPlaceholder}
               rows={12}
             />
           </div>
           <Button onClick={handleIngest} disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? 'Verarbeite...' : 'Artikel speichern'}
+            {isLoading ? texts.processing : texts.saveArticle}
           </Button>
         </CardContent>
       </Card>
 
       <div>
-        <h3 className="text-lg font-semibold mb-4">Vorhandene Wissensartikel</h3>
+        <h3 className="text-lg font-semibold mb-4">{texts.existingArticles}</h3>
         {isFetching ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -164,7 +167,7 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
           <Card>
             <CardContent className="flex flex-col items-center justify-center p-8 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Noch keine Wissensartikel vorhanden</p>
+              <p className="text-muted-foreground">{texts.noArticles}</p>
             </CardContent>
           </Card>
         ) : (
@@ -175,7 +178,7 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
                   <div className="flex-1">
                     <h4 className="font-semibold">{article.title}</h4>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {article.chunk_count} Chunk{article.chunk_count !== 1 ? 's' : ''} • {new Date(article.created_at).toLocaleDateString('de-DE')}
+                      {article.chunk_count} {article.chunk_count !== 1 ? texts.chunksPlural : texts.chunks} • {new Date(article.created_at).toLocaleDateString(language === 'de' ? 'de-DE' : 'en-GB')}
                     </p>
                     <p className="text-sm mt-2 line-clamp-2">{article.content.substring(0, 200)}...</p>
                   </div>
@@ -187,15 +190,15 @@ export function KnowledgeBaseManager({ learningModuleId, learningModuleName }: K
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Artikel löschen?</AlertDialogTitle>
+                        <AlertDialogTitle>{texts.deleteArticle}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Möchten Sie "{article.title}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+                          {texts.deleteConfirm.replace('{title}', article.title)}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                        <AlertDialogCancel>{texts.cancel}</AlertDialogCancel>
                         <AlertDialogAction onClick={() => handleDelete(article.title)}>
-                          Löschen
+                          {texts.delete}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
