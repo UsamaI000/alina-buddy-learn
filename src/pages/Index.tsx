@@ -22,7 +22,7 @@ interface IndexProps {
   currentLanguage: string;
 }
 
-export default function Index({ onLanguageChange, currentLanguage }: IndexProps) {
+function Index({ onLanguageChange, currentLanguage }: IndexProps) {
   const navigate = useNavigate();
   const getTexts = (lang: string) => {
     const texts = {
@@ -401,3 +401,5 @@ export default function Index({ onLanguageChange, currentLanguage }: IndexProps)
     </div>
   );
 }
+
+export default Index;
