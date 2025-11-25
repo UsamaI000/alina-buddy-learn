@@ -14,6 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
+      audio_summaries: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          learning_module_id: string
+          status: string
+          title: string
+          transcript: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          learning_module_id: string
+          status?: string
+          title: string
+          transcript?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          learning_module_id?: string
+          status?: string
+          title?: string
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_summaries_learning_module_id_fkey"
+            columns: ["learning_module_id"]
+            isOneToOne: false
+            referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          learning_module_id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          learning_module_id: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          learning_module_id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_learning_module_id_fkey"
+            columns: ["learning_module_id"]
+            isOneToOne: false
+            referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_sources: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          learning_module_id: string
+          processing_status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          learning_module_id: string
+          processing_status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          learning_module_id?: string
+          processing_status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_sources_learning_module_id_fkey"
+            columns: ["learning_module_id"]
+            isOneToOne: false
+            referencedRelation: "learning_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -57,10 +227,12 @@ export type Database = {
           content: string
           created_at: string
           created_by: string
+          document_source_id: string | null
           embedding: string | null
           id: string
           learning_module_id: string | null
           metadata: Json | null
+          page_number: number | null
           title: string
           updated_at: string
         }
@@ -70,10 +242,12 @@ export type Database = {
           content: string
           created_at?: string
           created_by: string
+          document_source_id?: string | null
           embedding?: string | null
           id?: string
           learning_module_id?: string | null
           metadata?: Json | null
+          page_number?: number | null
           title: string
           updated_at?: string
         }
@@ -83,14 +257,23 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string
+          document_source_id?: string | null
           embedding?: string | null
           id?: string
           learning_module_id?: string | null
           metadata?: Json | null
+          page_number?: number | null
           title?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "knowledge_base_document_source_id_fkey"
+            columns: ["document_source_id"]
+            isOneToOne: false
+            referencedRelation: "document_sources"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "knowledge_base_learning_module_id_fkey"
             columns: ["learning_module_id"]
@@ -126,6 +309,55 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      message_citations: {
+        Row: {
+          created_at: string
+          document_source_id: string | null
+          id: string
+          knowledge_base_id: string
+          message_id: string
+          relevance_score: number | null
+        }
+        Insert: {
+          created_at?: string
+          document_source_id?: string | null
+          id?: string
+          knowledge_base_id: string
+          message_id: string
+          relevance_score?: number | null
+        }
+        Update: {
+          created_at?: string
+          document_source_id?: string | null
+          id?: string
+          knowledge_base_id?: string
+          message_id?: string
+          relevance_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_citations_document_source_id_fkey"
+            columns: ["document_source_id"]
+            isOneToOne: false
+            referencedRelation: "document_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_citations_knowledge_base_id_fkey"
+            columns: ["knowledge_base_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_citations_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -255,6 +487,24 @@ export type Database = {
           metadata: Json
           similarity: number
           title: string
+        }[]
+      }
+      match_learning_module_knowledge: {
+        Args: {
+          learning_module_id_filter: string
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          chunk_index: number
+          chunk_text: string
+          document_source_id: string
+          document_title: string
+          file_name: string
+          id: string
+          page_number: number
+          similarity: number
         }[]
       }
     }
