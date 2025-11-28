@@ -13,13 +13,14 @@ import { useEvents } from '@/hooks/useEvents';
 import { useToast } from '@/hooks/use-toast';
 import type { AppUser } from '@/types/auth';
 import { getTranslation, type Language } from '@/utils/i18n';
-
+import { useNavigate } from 'react-router-dom';
 interface AzubiHomeProps {
   user: AppUser;
   language: string;
 }
 
 export default function AzubiHome({ user, language }: AzubiHomeProps) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { modules, loading: modulesLoading } = useLearningModules(user.apprenticeship);
   const { tasks, loading: tasksLoading, updateTaskStatus } = useTasks();
@@ -164,20 +165,20 @@ export default function AzubiHome({ user, language }: AzubiHomeProps) {
             <div className="space-y-6">
               <EventsCalendar events={events} language={language} />
               
-              {/* Chat Card */}
-              <Card className="hover:shadow-lg transition-shadow">
+              {/* REPLACED CHAT CARD WITH NOTEBOOK CARD */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/notebooks')}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-primary" />
-                    {texts.chat}
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    Notebooks & AI Tutor
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {texts.chatDesc}
+                    Upload lectures, create summaries, and generate quizzes to master your subjects.
                   </p>
-                  <Button className="w-full">
-                    {texts.startChat}
+                  <Button className="w-full" onClick={() => navigate('/notebooks')}>
+                    Open Notebooks
                   </Button>
                 </CardContent>
               </Card>

@@ -62,7 +62,7 @@ export default function Navigation({
       'azubi-learning-modules': t.learningModules,
       'azubi-calendar': t.calendar,
       'ausbilder-dashboard': t.instructorDashboard,
-      'chat': t.alinaChat,
+      'notebooks': "Notebooks", // Or t.notebooks if you add it to translations,
     };
     return labelMap[itemId] || itemId;
   };
