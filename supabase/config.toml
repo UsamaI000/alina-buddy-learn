@@ -1,1 +1,7 @@
-project_id = "iduclfwznqcuumxqbqqo"
+project_id = "yaiwgrqucvmkeqhfzldk"
+
+[functions.alina-chat]
+verify_jwt = false
+
+[functions.ingest-knowledge]
+verify_jwt = true

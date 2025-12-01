@@ -6,7 +6,6 @@ import { BarChart3, Users, BookOpen, CheckCircle, Clock, ArrowLeft, TrendingUp }
 import { supabase } from '@/integrations/supabase/client';
 import type { AppUser } from '@/types/auth';
 import { getTranslation, type Language } from '@/utils/i18n';
-import { useNavigate } from 'react-router-dom';
 
 interface AnalyticsData {
   totalStudents: number;
@@ -35,7 +34,6 @@ interface AnalyticsDashboardProps {
 }
 
 export default function AnalyticsDashboard({ user, language, onBack }: AnalyticsDashboardProps) {
-  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const texts = getTranslation('analyticsDashboard', language as Language);
@@ -267,24 +265,6 @@ export default function AnalyticsDashboard({ user, language, onBack }: Analytics
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* Notebook Card */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/notebooks')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                Notebooks & Content Gen
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Create AI-powered study materials, summaries, and quizzes from your documents.
-              </p>
-              <Button variant="outline" className="w-full" onClick={() => navigate('/notebooks')}>
-                Open Notebooks
-              </Button>
             </CardContent>
           </Card>
 

@@ -21,9 +21,6 @@ import { WelcomeTour } from "./components/auth/WelcomeTour";
 import { useAuthSession } from "./hooks/useAuthSession";
 import type { AppUser } from "@/types/auth";
 import { getRoleBasedRedirect } from "@/utils/auth";
-// Import the new pages
-import NotebooksDashboard from "./pages/NotebooksDashboard";
-import Notebook from "./pages/Notebook";
 
 const queryClient = new QueryClient();
 
@@ -83,9 +80,7 @@ function AppContent() {
           <Route element={<AppLayout currentUser={currentUser} currentLanguage={currentLanguage} onLanguageChange={setCurrentLanguage} showProfileBanner={!!showProfileBanner} />}>
             {/* Common authenticated routes */}
             <Route path="/profile" element={<Profile user={currentUser} language={currentLanguage} />} />
-            {/* --- REPLACED CHAT WITH NOTEBOOKS --- */}
-            <Route path="/notebooks" element={<NotebooksDashboard />} />
-            <Route path="/notebook/:notebookId" element={<Notebook />} />
+            <Route path="/chat" element={<div className="h-[calc(100vh-4rem)]"><ChatInterface language={currentLanguage} /></div>} />
 
             {/* Azubi Routes */}
             <Route element={<ProtectedRoute requiredRoles={['AUSZUBILDENDE_R']} isAuthenticated={!!currentUser} />}>
@@ -105,9 +100,7 @@ function AppContent() {
         {!currentUser && (
           <>
             <Route path="/profile" element={<Navigate to="/login" replace />} />
-            {/* 2. ADD THESE NEW ROUTES */}
-            <Route path="/notebooks" element={<NotebooksDashboard />} />
-            <Route path="/notebook/:notebookId" element={<Notebook />} />
+            <Route path="/chat" element={<Navigate to="/login" replace />} />
             <Route path="/azubi/*" element={<Navigate to="/login" replace />} />
             <Route path="/ausbilder/*" element={<Navigate to="/login" replace />} />
           </>

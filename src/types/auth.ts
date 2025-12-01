@@ -67,10 +67,10 @@ export const NAV_CONFIG = [
     path: '/ausbilder/dashboard'
   },
   {
-    id: 'notebooks',
-    label: 'Notebooks',
-    path: '/notebooks',
-    icon: BookOpen, // Make sure to import BookOpen from lucide-react
-    allowedRoles: ['AZUBI', 'AUSBILDER', 'ADMIN'] // Accessible to all
+    id: 'chat',
+    label: 'ALINA Chat',
+    icon: MessageSquare,
+    allowedRoles: ['AUSZUBILDENDE_R', 'AUSBILDER_IN'] as UserRole[],
+    path: '/chat'
   }
 ] as const;
